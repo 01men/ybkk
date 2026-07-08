@@ -45,10 +45,10 @@
 
 ## 4. 元信息（替换占位符）
 
-- 产品名: <PRODUCT_NAME>
-- 仓库: <REPO_URL>
+- 产品名: 元冰可可
+- 仓库: https://github.com/01men/ybkk
 - 部署: <DEPLOY_URL>
-- 维护者: <YOUR_NAME>
+- 维护者: xiaodao
 - 工具栈基线: 见 `kb/tooling.md`
 - 最近更新: <YYYY-MM-DD>
 
