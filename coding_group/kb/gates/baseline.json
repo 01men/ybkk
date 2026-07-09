@@ -1,0 +1,19 @@
+{
+  "captured_at": "2026-07-08T18:30:00+00:00",
+  "commit_sha": "unknown",
+  "notes": "AIOS-001 dev 棒起点。当前仓库为脚手架阶段，无业务代码、无测试、无 E2E；baseline 全部为空，后续 dev 棒每完成一阶段，重跑 gate.ps1 baseline 更新。",
+  "gates": {
+    "coverage": {
+      "failures": []
+    },
+    "lint": {
+      "failures": []
+    },
+    "deploy-test": {
+      "failures": []
+    },
+    "e2e": {
+      "failures": []
+    }
+  }
+}

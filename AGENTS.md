@@ -9,11 +9,11 @@
 
 进入这个仓库后，按下面顺序做事，不要跳：
 
-1. 读 `kb/AGENTS.md`（展开版规约）
-2. 读 `kb/tooling.md`（工具栈基线）
-3. 读 `kb/skills/` 下与你当前阶段相关的 Skill
-4. 检查 `kb/changelog.md` 最近 5 条
-5. 看 `kb/artifacts/` 当前是否还有未完成的需求，如有，先交接 / 接管
+1. 读 `coding_group/kb/AGENTS.md`（展开版规约）
+2. 读 `coding_group/kb/tooling.md`（工具栈基线）
+3. 读 `coding_group/assets/skills/` 下与你当前阶段相关的 Skill
+4. 检查 `coding_group/kb/changelog.md` 最近 5 条
+5. 看 `coding_group/kb/artifacts/` 当前是否还有未完成的需求，如有，先交接 / 接管
 6. 检查 `.gates-state.json` 看门禁是否处于通过态
 
 ---
@@ -28,10 +28,10 @@
 
 ## 2. 工程规则
 
-- 提交前必须 5 道门禁全过。详见 `scripts/gates/`。
+- 提交前必须 5 道门禁全过。详见 `coding_group/assets/scripts/`。
 - 覆盖率阈值：核心模块 ≥ 80%，其他 ≥ 60%。
 - 所有 PR 必须有 review-report 引用。
-- 制品必须落到 `kb/artifacts/<req-id>/`，不要散落到其他位置。
+- 制品必须落到 `coding_group/kb/artifacts/<req-id>/`，不要散落到其他位置。
 
 ---
 
@@ -49,7 +49,7 @@
 - 仓库: https://github.com/01men/ybkk
 - 部署: <DEPLOY_URL>
 - 维护者: xiaodao
-- 工具栈基线: 见 `kb/tooling.md`
+- 工具栈基线: 见 `coding_group/kb/tooling.md`
 - 最近更新: <YYYY-MM-DD>
 
 ---
@@ -64,6 +64,8 @@
 | 代码审查 | `scope-overflow-check` → `security-rules` → `coding-conventions` → `frontend-quality` → `feedback-loop-rules` |
 | 验收/交付 | `deployment-checklist` → `feedback-loop-rules` |
 
+> 上述 Skill 路径前缀均为 `coding_group/assets/skills/<skill-name>/SKILL.md`。
+
 ---
 
 ## 6. 反馈循环纪律（最关键）
@@ -77,7 +79,7 @@
 
 ## 7. 制品约定
 
-`kb/artifacts/<req-id>/` 下放每一棒产物：
+`coding_group/kb/artifacts/<req-id>/` 下放每一棒产物：
 
 | 阶段 | 必写 | 禁止动 |
 |---|---|---|
@@ -88,3 +90,45 @@
 | 审查 | `06-review-report.md` | **只有 reviewer 可写** |
 | 验收 | `07-delivery-report.md` | 只有 orchestrator 可写 |
 | 阻塞项 | `blockers/*.md` | 任何 Agent 可读；写必须遵守 `feedback-loop-rules` §6 schema |
+
+---
+
+## 8. 目录布局（速查）
+
+```
+ybkk/                                # 仓库根（本文件所在）
+├── AGENTS.md                        # 本文件：仓库级家法
+├── README.md
+├── src/  tests/  scripts/  ...      # 业务代码（按你栈的具体约定）
+└── coding_group/                    # Agent 团队 + 知识库
+    ├── README.md
+    ├── 00-30min-kickoff.md
+    ├── 01-overview.md
+    ├── 02-tooling-checklist.md
+    ├── 03-repository-bootstrap.md
+    ├── 04-agents.md
+    ├── 05-skills.md
+    ├── 06-workflow.md
+    ├── 07-scripts.md
+    ├── 08-mcp.md
+    ├── 09-runbook.md
+    ├── 10-evolve.md
+    ├── assets/
+    │   ├── prompts/                 # 4 个 Agent prompt + orchestrator
+    │   ├── scripts/                 # 5 道门禁脚本 + coverage 插件
+    │   └── skills/                  # 11 个 SKILL.md
+    └── kb/
+        ├── AGENTS.md                # 展开版规约（详见 §0.1）
+        ├── tooling.md
+        └── changelog.md
+```
+
+> **常见误用**：别再把所有研发物料丢到 `coding_group/` 根目录了。脚手架文档在 `coding_group/`，业务代码、知识库展开版、制品在各自子目录，仓库根保留 `AGENTS.md` 和实际产品代码。
+
+---
+
+## 9. 维护责任
+
+- 这份 `AGENTS.md` 由 orchestrator 在每次体系演进时复核（参见 `coding_group/10-evolve.md`）。
+- 修改前先在 `coding_group/kb/changelog.md` 写一条变更记录。
+- 涉及门禁阈值、角色边界、制品约定的改动，必须先经人工确认。

@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 command -v jq >/dev/null 2>&1 || { echo "❌ 缺少 jq"; exit 1; }
 command -v node >/dev/null 2>&1 || { echo "❌ 缺少 node"; exit 1; }
@@ -23,8 +23,13 @@ if [ -d "tests/e2e" ] && [ -f "playwright.config.ts" ]; then
         > "$RAW_OUTPUT" 2>&1 || true
 elif [ -f "cypress.config.js" ] || [ -f "cypress.config.ts" ]; then
     npx cypress run --reporter=json > "$RAW_OUTPUT" 2>&1 || true
+elif [ -d "tests/e2e" ] && find . -name "pyproject.toml" -path "*/tests/*" 2>/dev/null | head -1; then
+    # Python E2E（pytest）
+    if command -v pytest >/dev/null 2>&1; then
+        uv run pytest tests/e2e -v --tb=short -q > "$RAW_OUTPUT" 2>&1 || true
+    fi
 else
-    echo "❌ e2e gate FAIL: 没找到 Playwright 或 Cypress 配置"
+    echo "❌ e2e gate FAIL: 没找到 Playwright / Cypress / pytest 配置"
     exit 1
 fi
 
@@ -40,7 +45,19 @@ try {
 }
 let data;
 try { data = JSON.parse(raw); } catch (e) {
-    console.log('[]');
+    // 可能是 pytest 输出：解析 ok/failed 行
+    const failed = [];
+    const lines = raw.split('\n');
+    let currentTest = null;
+    for (const line of lines) {
+        const m = line.match(/^(.+?) (PASSED|FAILED|ERROR)$/);
+        if (m) currentTest = m[1];
+        if (line.includes('FAILED') && currentTest) {
+            failed.push({ test: currentTest });
+            currentTest = null;
+        }
+    }
+    console.log(JSON.stringify({ failures: failed }));
     process.exit(0);
 }
 const failed = [];
@@ -65,7 +82,7 @@ console.log(JSON.stringify({ failures: failed }));
 NODE
 )
 
-baseline_file="kb/gates/baseline.json"
+baseline_file="coding_group/kb/gates/baseline.json"
 if [ -f "$baseline_file" ]; then
     baseline_fails=$(jq -c '.gates.e2e.failures // []' "$baseline_file")
     delta=$(jq -c -n --argjson b "$baseline_fails" --argjson c "$failures" '$c - $b')

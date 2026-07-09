@@ -1,0 +1,67 @@
+[project]
+name = "aios-api"
+version = "0.1.0"
+description = "元冰可可 AIOS - FastAPI 后端"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14.0",
+    "asyncpg>=0.30.0",
+    "psycopg2-binary>=2.9.10",
+    "neo4j>=5.26.0",
+    "redis>=5.2.0",
+    "minio>=7.2.8",
+    "httpx>=0.27.2",
+    "pyjwt>=2.9.0",
+    "python-multipart>=0.0.20",
+    "pandas>=2.2.3",
+    "openpyxl>=3.1.5",
+    "sqlglot>=26.0.0",
+    "unstructured[pdf]>=0.16.5",
+    "paddleocr>=2.9.1",
+    "temporalio>=1.10.0",
+    "nats-py>=2.10.0",
+    "aiosqlite>=0.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "pytest-cov>=6.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.2",
+    "ruff>=0.7.4",
+    "mypy>=1.13.0",
+    "types-redis>=4.6.0",
+    "faker>=30.0.0",
+    "freezegun>=1.5.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "PT", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --tb=short"

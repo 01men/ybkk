@@ -1,0 +1,293 @@
+# =============================================================================
+# 元冰可可 AIOS — Docker Compose 一键私有化部署
+# =============================================================================
+# 默认配置：核心组件（API / Web / PostgreSQL / Neo4j / Redis / MinIO / NATS / Temporal / Qwen-LLM）
+# 监控组件（Prometheus / Grafana / Loki）：用 `docker-compose --profile monitoring up -d` 启用
+# =============================================================================
+
+x-common-env: &common-env
+  env_file: .env
+  restart: unless-stopped
+  networks:
+    - aios-net
+
+services:
+  # ---------------------------------------------------------------------------
+  # 控制台（前端）
+  # ---------------------------------------------------------------------------
+  web:
+    image: ghcr.io/01men/ybkk-web:${AIOS_VERSION:-0.1.0}
+    <<: *common-env
+    container_name: aios_web_1
+    ports:
+      - "${AIOS_CONSOLE_PORT:-8443}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # API（后端）
+  # ---------------------------------------------------------------------------
+  api:
+    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.1.0}
+    <<: *common-env
+    container_name: aios_api_1
+    ports:
+      - "${AIOS_API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # 数据接入 worker
+  # ---------------------------------------------------------------------------
+  ingest:
+    image: ghcr.io/01men/ybkk-ingest:${AIOS_VERSION:-0.1.0}
+    <<: *common-env
+    container_name: aios_ingest_1
+    depends_on:
+      - postgres
+      - neo4j
+      - minio
+
+  # ---------------------------------------------------------------------------
+  # 本体图服务（共用 API 镜像，独立进程）
+  # ---------------------------------------------------------------------------
+  ontology:
+    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.1.0}
+    <<: *common-env
+    container_name: aios_ontology_1
+    command: ["uv", "run", "python", "-m", "aios_ontology.worker"]
+    depends_on:
+      - neo4j
+      - postgres
+
+  # ---------------------------------------------------------------------------
+  # Temporal worker（流程引擎）
+  # ---------------------------------------------------------------------------
+  flow_engine:
+    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.1.0}
+    <<: *common-env
+    container_name: aios_flow_engine_1
+    command: ["uv", "run", "python", "-m", "aios_flow_engine.worker"]
+    depends_on:
+      - temporal
+      - postgres
+      - neo4j
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL（平台自有库）
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    <<: *common-env
+    container_name: aios_postgres_1
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aios}
+      POSTGRES_USER: ${POSTGRES_USER:-aios}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../api/src/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aios} -d ${POSTGRES_DB:-aios}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # Neo4j（本体图）
+  # ---------------------------------------------------------------------------
+  neo4j:
+    image: neo4j:5-community
+    <<: *common-env
+    container_name: aios_neo4j_1
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/aios}
+      NEO4J_PLUGINS: '[]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7474/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # Redis（缓存 + 限流）
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    <<: *common-env
+    container_name: aios_redis_1
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # MinIO（对象存储）
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    <<: *common-env
+    container_name: aios_minio_1
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-aios}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # NATS（消息总线）
+  # ---------------------------------------------------------------------------
+  nats:
+    image: nats:2-alpine
+    <<: *common-env
+    container_name: aios_nats_1
+    command: ["nats-server", "-js"]
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # Temporal（流程引擎）
+  # ---------------------------------------------------------------------------
+  temporal:
+    image: temporalio/auto-setup:1.24
+    <<: *common-env
+    container_name: aios_temporal_1
+    environment:
+      DB: postgresql
+      DB_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-aios}
+      POSTGRES_PWD: ${POSTGRES_PASSWORD}
+      POSTGRES_SEEDS: postgres
+      DYNAMIC_CONFIG_FILE_PATH: /etc/temporal/config/dynamicconfig/development.yaml
+    volumes:
+      - ./temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8233/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ---------------------------------------------------------------------------
+  # LLM 网关（自部署 Qwen2.5-72B）
+  # ---------------------------------------------------------------------------
+  qwen:
+    image: ghcr.io/01men/ybkk-qwen:${AIOS_VERSION:-0.1.0}
+    <<: *common-env
+    container_name: aios_qwen_1
+    ports:
+      - "8001:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # 监控（仅 --profile monitoring 启用）
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    profiles: ["monitoring"]
+    container_name: aios_prometheus_1
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - aios-net
+
+  grafana:
+    image: grafana/grafana:latest
+    profiles: ["monitoring"]
+    container_name: aios_grafana_1
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - aios-net
+
+  loki:
+    image: grafana/loki:latest
+    profiles: ["monitoring"]
+    container_name: aios_loki_1
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - aios-net
+
+# =============================================================================
+# 网络与卷
+# =============================================================================
+networks:
+  aios-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  neo4j-data:
+  redis-data:
+  minio-data:
+  nats-data:
+  prometheus-data:
+  grafana-data:
+  loki-data:

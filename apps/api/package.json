@@ -1,0 +1,22 @@
+{
+  "name": "@aios/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "元冰可可 AIOS — FastAPI 后端",
+  "type": "module",
+  "scripts": {
+    "dev": "uv run fastapi dev src/main.py --host 0.0.0.0 --port 8000",
+    "build": "uv build",
+    "test": "uv run pytest tests/unit -v --cov=src --cov-report=xml --cov-report=term",
+    "test:integration": "uv run pytest tests/integration -v",
+    "test:e2e": "uv run pytest tests/e2e -v",
+    "lint": "uv run ruff check src tests && uv run mypy src",
+    "coverage": "uv run pytest tests/unit --cov=src --cov-report=html",
+    "typecheck": "uv run mypy src"
+  },
+  "dependencies": {
+    "@aios/standards": "workspace:*",
+    "@aios/audit": "workspace:*",
+    "@aios/llm-gateway": "workspace:*"
+  }
+}

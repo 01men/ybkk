@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # scripts/gates/plugins/coverage-node.sh — Node.js 覆盖率 plugin
 #
-# 期望：package.json 里有 "test:coverage": "nyc --reporter=json npm test"
+# 期望：package.json 里有 "test:coverage"
 # 输出：{"failures": [{"file": ..., "covered": 0.5, "threshold": 0.6}, ...]}
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 cd "$PROJECT_ROOT"
 
-# 用 nyc 跑测试 + 拿 coverage-final.json
-if [ -d "node_modules/.bin" ] && [ -x "node_modules/.bin/nyc" ]; then
-    npm run test:coverage --silent > /tmp/cov-node.log 2>&1 || true
+# 用 vitest 跑测试 + 拿 coverage-final.json
+if [ -d "node_modules/.bin" ] && [ -x "node_modules/.bin/vitest" ]; then
+    pnpm run test -- --coverage --reporter=json > /tmp/cov-node.log 2>&1 || true
 fi
 
 # 没拿到就返回空
@@ -24,7 +24,7 @@ fi
 node <<'NODE'
 const fs = require('fs');
 const path = require('path');
-const core = ['src/services/', 'src/lib/', 'src/core/'];
+const core = ['apps/web/src/services', 'apps/web/src/lib', 'packages/standards/src', 'packages/audit/src', 'packages/llm-gateway/src'];
 let cov;
 try {
     cov = require(path.join(process.cwd(), 'coverage/coverage-final.json'));

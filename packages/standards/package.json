@@ -1,0 +1,25 @@
+{
+  "name": "@aios/standards",
+  "version": "0.1.0",
+  "private": true,
+  "description": "元冰可可 AIOS — 场景模板 DSL 与内置交付标准",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run --coverage",
+    "lint": "eslint src tests",
+    "coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "yaml": "^2.6.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.13",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.5",
+    "@vitest/coverage-v8": "^2.1.5"
+  }
+}

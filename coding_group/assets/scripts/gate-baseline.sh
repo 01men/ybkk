@@ -10,9 +10,10 @@
 
 set -euo pipefail
 
+# 关键修正：脚本位于 <repo>/coding_group/assets/scripts/，往上三级才是仓库根
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-BASELINE_FILE="$PROJECT_ROOT/kb/gates/baseline.json"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+BASELINE_FILE="$PROJECT_ROOT/coding_group/kb/gates/baseline.json"
 GATE_OUTPUT_DIR="$PROJECT_ROOT/.gate-output"
 
 mkdir -p "$GATE_OUTPUT_DIR"

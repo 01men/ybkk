@@ -1,0 +1,34 @@
+{
+  "name": "yuanbingkeke-aios",
+  "private": true,
+  "version": "0.1.0",
+  "description": "元冰可可 AIOS — 面向离散制造企业的 AI 操作系统（私有化部署）",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "coverage": "turbo run coverage",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,py}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,py}\"",
+    "gate:baseline": "bash coding_group/assets/scripts/gate-baseline.sh --snapshot",
+    "gate:coverage": "bash coding_group/assets/scripts/gate-coverage.sh",
+    "gate:lint": "bash coding_group/assets/scripts/gate-lint.sh",
+    "gate:deploy-test": "bash coding_group/assets/scripts/gate-deploy-test.sh",
+    "gate:e2e": "bash coding_group/assets/scripts/gate-e2e.sh",
+    "gate:all": "pnpm gate:coverage && pnpm gate:lint && pnpm gate:deploy-test && pnpm gate:e2e"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.6",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "@types/node": "^20.14.13"
+  }
+}

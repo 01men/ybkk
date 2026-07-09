@@ -8,8 +8,9 @@
 
 set -euo pipefail
 
+# 关键修正：仓库根在脚本上三级
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 command -v jq >/dev/null 2>&1 || { echo "❌ 缺少 jq"; exit 1; }
 
@@ -37,7 +38,7 @@ else
 fi
 
 failures=$(echo "$coverage_json" | jq -c '.failures // []')
-baseline_file="$PROJECT_ROOT/kb/gates/baseline.json"
+baseline_file="$PROJECT_ROOT/coding_group/kb/gates/baseline.json"
 
 if [ -f "$baseline_file" ]; then
     baseline_failures=$(jq -c '.gates.coverage.failures // []' "$baseline_file")

@@ -1,0 +1,20 @@
+{
+  "name": "@aios/audit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "元冰可可 AIOS — 审计日志库（append-only + hash 链）",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run --coverage",
+    "lint": "eslint src tests",
+    "coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.14.13",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.5"
+  }
+}
