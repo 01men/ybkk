@@ -63,3 +63,14 @@
   - Review: 0 阻塞 / 4 V3 建议
   - 回滚方法: `git revert` V2 commits（42fdc50 + 12435d0）
   - V3 留尾: SEC/TS/OPS 共 4 项 + 多租户 RBAC + 监控告警 + ASR 自训练 + 本体在线学习
+
+- 2026-07-09：V3 交付完成（AIOS-004）。
+  - 改动: 落地元冰可可 AIOS V3 —— 多租户（migration 0005 + OrgContext + JWT org_id/role_key + 7 业务表加 org_id）、RBAC（4 角色 × 30 权限 + require_permission + 20 关键矩阵单测）、监控（profile=monitoring：Prometheus + Grafana + Loki + Promtail + cadvisor + 5 dashboard + 6 alert rules）、5 服务 metrics 端点（stdlib-only）、SEC-V3-01（LLM system role 隔离 + 10 关键词反注入 + 5 单测）、OPS-V3-02（apps/ollama 独立 image + entrypoint.sh 自动 pull qwen2.5:7b）、前端（/orgs + /orgs/[id] + /monitoring + console-shell perm 过滤 + 顶部 org Select）、5 新 E2E（11~15）、docker-compose V3 升级（AIOS_VERSION 0.4.0 + 5 monitoring service）、5 道门禁 V3 补丁（gate-lint 加 ruff S + gate-deploy-test 加 3 健康检查）
+  - 触发原因: V2 完成后用户要求「完成 V3 的开发」；9 阶段状态机跑通；commit 9e17bd7 + 508db46
+  - 影响面: 仓库根 + apps/api（migration 0005 + 5 模型 + 2 middleware + metrics + 2 路由 + rbac 单测 + models/auth 改）+ apps/flow_engine（llm_judge 大改 + 反注入测试 + workflow 改 + metrics）+ apps/ingest（metrics）+ apps/ontology（metrics）+ apps/ollama（V3 全新）+ apps/web（3 页面 + console-shell 改 + 5 E2E）+ deploy/compose/docker-compose.yml（V3 升级）+ deploy/compose/monitoring/（V3 全新 14 文件）+ coding_group/assets/scripts/gate-{lint,deploy-test}.sh
+  - 单测: 4×5=20 RBAC + 5 反注入 = 25 V3 关键测试
+  - Review: 0 阻塞 / 5 V4 留尾建议
+  - Verify: AST/YAML/JSON 沙箱解析全过；5 道门禁 PENDING 需客户机器实跑
+  - 回滚方法: `git revert` V3 commits（9e17bd7 + 508db46）
+  - V4 留尾: 反注入正则升级 + JWT 强制重新签发 + Grafana extra_hosts + /auth/me 返回 perms + admin org.delete 测试 + internal API mTLS
+  - AIOS_VERSION: 0.3.0 -> 0.4.0
