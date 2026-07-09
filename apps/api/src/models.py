@@ -13,6 +13,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     func,
@@ -51,6 +52,13 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
     OPERATOR = "operator"
     VIEWER = "viewer"
+
+
+class IngestStatus(str, enum.Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
 
 
 class Datasource(Base):
@@ -150,7 +158,6 @@ class Flow(Base):
         index=True,
     )
     created_by: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    # V1 新增
     trigger_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     trigger_config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     temporal_workflow_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -188,7 +195,6 @@ class FlowRun(Base):
     )
     output_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     audit_ref: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    # V1 新增
     trigger_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     temporal_run_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     step_results: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -245,3 +251,70 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f"<User {self.username} role={self.role}>"
+
+
+# V2 新增 ----------------------------------------------------------
+
+
+class IngestJob(Base):
+    """摄取任务（V2 新增）。"""
+
+    __tablename__ = "ingest_jobs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    filename: Mapped[str] = mapped_column(String(512), nullable=False)
+    minio_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    status: Mapped[IngestStatus] = mapped_column(
+        Enum(IngestStatus, name="ingest_status"),
+        nullable=False,
+        default=IngestStatus.PENDING,
+    )
+    parsed_count: Mapped[int] = mapped_column(Integer, default=0)
+    entities_count: Mapped[int] = mapped_column(Integer, default=0)
+    relations_count: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class LLMCall(Base):
+    """LLM 调用记录（V2 新增）。"""
+
+    __tablename__ = "llm_calls"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    model: Mapped[str] = mapped_column(String(64), nullable=False)
+    prompt_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    response_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    cost_usd: Mapped[float | None] = mapped_column(Numeric(10, 6), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    actor: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    flow_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class OntologyFieldMapping(Base):
+    """本体字段映射规则（V2 新增）。"""
+
+    __tablename__ = "ontology_field_mappings"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    template_name: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    target_kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    field_map: Mapped[dict] = mapped_column(JSON, nullable=False)
+    relations: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    confidence: Mapped[float | None] = mapped_column(Numeric(3, 2), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

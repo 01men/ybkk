@@ -31,8 +31,34 @@ if [ -f "deploy/compose/docker-compose.yml" ]; then
             DEPLOY_URL="${AIOS_DEPLOY_TEST_URL:-http://localhost:8000}"
             if curl -sf "${DEPLOY_URL}/api/v1/health" > /dev/null; then
                 echo "✅ deploy-test gate PASS — ${DEPLOY_URL}/api/v1/health"
-                [ "${1:-}" = "--capture" ] && echo "{\"failures\":[], \"url\":\"${DEPLOY_URL}\"}"
-                exit 0
+
+                # V2: 额外检查 ingest / ontology / ollama 健康
+                v2_ok=1
+                if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "aios_ingest_1"; then
+                    if ! curl -sf "http://localhost:8082/health" > /dev/null; then
+                        echo "⚠️  ingest 健康检查失败"
+                        v2_ok=0
+                    fi
+                fi
+                if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "aios_ontology_1"; then
+                    if ! curl -sf "http://localhost:8083/health" > /dev/null; then
+                        echo "⚠️  ontology 健康检查失败"
+                        v2_ok=0
+                    fi
+                fi
+                if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "aios_ollama_1"; then
+                    if ! curl -sf "http://localhost:11434/api/tags" > /dev/null; then
+                        echo "⚠️  ollama 健康检查失败"
+                        v2_ok=0
+                    fi
+                fi
+                if [ "$v2_ok" -eq 1 ]; then
+                    [ "${1:-}" = "--capture" ] && echo "{\"failures\":[], \"url\":\"${DEPLOY_URL}\"}"
+                    exit 0
+                else
+                    [ "${1:-}" = "--capture" ] && echo '{"failures":["v2-health-degraded"]}'
+                    exit 1
+                fi
             fi
         fi
 

@@ -1,7 +1,9 @@
 # =============================================================================
-# 元冰可可 AIOS — Docker Compose 一键私有化部署 (V1)
+# 元冰可可 AIOS — Docker Compose 一键私有化部署 (V2)
 # =============================================================================
-# 默认配置：核心组件（API / Web / PostgreSQL / Neo4j / Redis / MinIO / NATS / Temporal / Qwen-LLM / Flow-Engine）
+# V2 新增：ingest / ontology / ollama 三个服务
+# 默认配置：API / Web / PostgreSQL / Neo4j / Redis / MinIO / NATS / Temporal / Qwen-LLM / Flow-Engine
+# V2 新增：Ingest-Worker / Ontology-Worker / Ollama
 # 监控组件（Prometheus / Grafana / Loki）：用 `docker-compose --profile monitoring up -d` 启用
 # =============================================================================
 
@@ -13,10 +15,10 @@ x-common-env: &common-env
 
 services:
   # ---------------------------------------------------------------------------
-  # 控制台（前端 V1）
+  # 控制台（前端 V2）
   # ---------------------------------------------------------------------------
   web:
-    image: ghcr.io/01men/ybkk-web:${AIOS_VERSION:-0.2.0}
+    image: ghcr.io/01men/ybkk-web:${AIOS_VERSION:-0.3.0}
     <<: *common-env
     container_name: aios_web_1
     ports:
@@ -31,14 +33,17 @@ services:
       retries: 6
 
   # ---------------------------------------------------------------------------
-  # API（后端 V1）
+  # API（后端 V2）
   # ---------------------------------------------------------------------------
   api:
-    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.2.0}
+    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.3.0}
     <<: *common-env
     container_name: aios_api_1
     ports:
       - "${AIOS_API_PORT:-8000}:8000"
+    environment:
+      AIOS_ONTOLOGY_URL: http://ontology:8083
+      AIOS_LLM_URL: http://ollama:11434
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,6 +57,8 @@ services:
         condition: service_healthy
       temporal:
         condition: service_healthy
+      ollama:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 10s
@@ -59,34 +66,54 @@ services:
       retries: 6
 
   # ---------------------------------------------------------------------------
-  # 数据接入 worker
+  # 数据接入 worker (V2 独立镜像)
   # ---------------------------------------------------------------------------
   ingest:
-    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.2.0}
+    image: ghcr.io/01men/ybkk-ingest:${AIOS_VERSION:-0.3.0}
     <<: *common-env
     container_name: aios_ingest_1
+    command: ["uv", "run", "python", "-m", "aios_ingest.worker"]
     depends_on:
-      - postgres
-      - neo4j
-      - minio
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ---------------------------------------------------------------------------
-  # 本体图服务（共用 API 镜像，独立进程）
+  # 本体图服务 (V2 独立镜像)
   # ---------------------------------------------------------------------------
   ontology:
-    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.2.0}
+    image: ghcr.io/01men/ybkk-ontology:${AIOS_VERSION:-0.3.0}
     <<: *common-env
     container_name: aios_ontology_1
     command: ["uv", "run", "python", "-m", "aios_ontology.worker"]
     depends_on:
-      - neo4j
-      - postgres
+      neo4j:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ---------------------------------------------------------------------------
-  # Flow Engine (V1 新增：Temporal worker + 场景编排)
+  # Flow Engine (V2)
   # ---------------------------------------------------------------------------
   flow-engine:
-    image: ghcr.io/01men/ybkk-flow-engine:${AIOS_VERSION:-0.2.0}
+    image: ghcr.io/01men/ybkk-flow-engine:${AIOS_VERSION:-0.3.0}
     <<: *common-env
     container_name: aios_flow_engine_1
     ports:
@@ -94,10 +121,15 @@ services:
     environment:
       AIOS_FLOW_TEMPORAL_HOST: temporal:7233
       AIOS_FLOW_API_URL: http://api:8000
+      AIOS_LLM_URL: http://ollama:11434
       AIOS_FLOW_LOG_LEVEL: INFO
     depends_on:
-      - temporal
-      - api
+      temporal:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+      ollama:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 10s
@@ -223,10 +255,10 @@ services:
       retries: 6
 
   # ---------------------------------------------------------------------------
-  # LLM 网关（自部署 Qwen2.5-72B）
+  # LLM 网关（自部署 Qwen2.5-72B, V1）
   # ---------------------------------------------------------------------------
   qwen:
-    image: ghcr.io/01men/ybkk-qwen:${AIOS_VERSION:-0.2.0}
+    image: ghcr.io/01men/ybkk-qwen:${AIOS_VERSION:-0.3.0}
     <<: *common-env
     container_name: aios_qwen_1
     ports:
@@ -241,6 +273,29 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # ---------------------------------------------------------------------------
+  # Ollama (V2 主力 LLM：本地 7B 推理)
+  # ---------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: aios_ollama_1
+    restart: unless-stopped
+    networks:
+      - aios-net
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      OLLAMA_HOST: "0.0.0.0:11434"
+      OLLAMA_KEEP_ALIVE: "24h"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 60s
 
   # ---------------------------------------------------------------------------
   # 监控（仅 --profile monitoring 启用）
@@ -297,6 +352,7 @@ volumes:
   redis-data:
   minio-data:
   nats-data:
+  ollama-data:
   prometheus-data:
   grafana-data:
   loki-data:

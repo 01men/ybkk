@@ -1,0 +1,40 @@
+{
+  "req_id": "AIOS-003",
+  "product_name": "元冰可可",
+  "product_alias": "AIOS",
+  "stage": "review-done",
+  "stage_history": [
+    {"stage": "init", "started_at": "2026-07-09T10:05:00+08:00", "agent": "orchestrator", "note": "V2 范围"},
+    {"stage": "analyze", "started_at": "2026-07-09T10:08:00+08:00", "agent": "requirements-analyst", "note": "PRD 自评 86 分"},
+    {"stage": "design", "started_at": "2026-07-09T10:12:00+08:00", "agent": "solution-architect", "note": "10 任务清单确认通过"},
+    {"stage": "dev", "started_at": "2026-07-09T10:20:00+08:00", "agent": "developer", "note": "10/10 任务完成；19 单测通过；0 阻塞"},
+    {"stage": "review", "started_at": "2026-07-09T12:00:00+08:00", "agent": "reviewer", "note": "PASS：0 阻塞 / 4 V3 建议"}
+  ],
+  "current_stage": {
+    "name": "verify",
+    "assigned_agent": "orchestrator",
+    "started_at": "2026-07-09T12:00:00+08:00",
+    "gate_required": "5 道门禁全过 + E2E",
+    "gate_basis": "AGENTS.md §1 9 阶段状态机"
+  },
+  "blockers": [],
+  "artifacts": {
+    "00-product-brief.md": "present",
+    "01-requirement-doc.md": "present",
+    "02-design-doc.md": "present",
+    "03-tasks.md": "present",
+    "04-code-changes.md": "present",
+    "05-self-test-report.md": "present",
+    "06-review-report.md": "present",
+    "07-delivery-report.md": "pending",
+    "08-ship-log.md": "pending"
+  },
+  "human_gates_hit": 0,
+  "rejection_streak": 0,
+  "mcp_calls": [],
+  "notes": [
+    "V2 PRD 自评 86",
+    "V2 dev 棒完成：10/10 任务、19/19 单测",
+    "V2 review 棒 PASS：0 阻塞 / 4 V3 建议（SEC/TS/OPS×2）"
+  ]
+}

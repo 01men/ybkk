@@ -10,6 +10,9 @@ import {
   BranchesOutlined,
   AuditOutlined,
   LogoutOutlined,
+  CloudUploadOutlined,
+  NodeIndexOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { api } from '@/lib/api';
 
@@ -17,8 +20,11 @@ const { Header, Content, Sider } = Layout;
 
 const items = [
   { key: '/datasources', icon: <DatabaseOutlined />, label: <Link href="/datasources">数据源</Link> },
+  { key: '/ingest', icon: <CloudUploadOutlined />, label: <Link href="/ingest">数据接入</Link> },
   { key: '/scenarios', icon: <AppstoreOutlined />, label: <Link href="/scenarios">场景模板</Link> },
   { key: '/flows', icon: <BranchesOutlined />, label: <Link href="/flows">业务流程</Link> },
+  { key: '/ontology', icon: <NodeIndexOutlined />, label: <Link href="/ontology">本体浏览</Link> },
+  { key: '/llm-usage', icon: <RobotOutlined />, label: <Link href="/llm-usage">LLM 用量</Link> },
   { key: '/audits', icon: <AuditOutlined />, label: <Link href="/audits">审计日志</Link> },
 ];
 

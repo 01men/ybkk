@@ -60,9 +60,46 @@ async def record_flow_run_activity(payload: dict) -> None:
         logging.getLogger("aios_flow.workflow").warning("record_flow_run failed: %s", e)
 
 
+@activity.defn(name="llm_judge")
+async def llm_judge_activity(payload: dict) -> dict:
+    """V2: LLM 判断 activity 包装。
+
+    payload = {
+        "template_key": "quality_defect" | "inbound_anomaly" | "equipment_alert",
+        "context": {...},
+        "expected_schema": [...],   # 可选
+        "actor": "...",
+        "run_id": "...",
+    }
+    返回 dict: {decision, confidence, reasoning, raw_response, duration_ms, llm_call_id}
+    """
+    from .activities.llm_judge import LLMJudgeInput, llm_judge, get_template
+
+    template = get_template(payload.get("template_key", "equipment_alert"))
+    inp = LLMJudgeInput(
+        prompt=template,
+        context=payload.get("context", {}),
+        expected_schema=payload.get("expected_schema", []),
+        actor=payload.get("actor", "system"),
+        run_id=payload.get("run_id", ""),
+    )
+    result = await llm_judge(inp)
+    return {
+        "decision": result.decision,
+        "confidence": result.confidence,
+        "reasoning": result.reasoning,
+        "raw_response": result.raw_response,
+        "duration_ms": result.duration_ms,
+        "llm_call_id": result.llm_call_id,
+    }
+
+
 @workflow.defn(name="GenericScenarioWorkflow")
 class GenericScenarioWorkflow:
-    """5 场景共用：按 flow_template 顺序执行每个 step。"""
+    """5 场景共用：按 flow_template 顺序执行每个 step。
+
+    V2 扩展：step.type == "llm_judge" 时改走 llm_judge_activity。
+    """
 
     @workflow.run
     async def run(self, input: ScenarioInput) -> ScenarioResult:
@@ -88,21 +125,53 @@ class GenericScenarioWorkflow:
         for step in input.flow_template:
             step_id = step["id"]
             standard_key = step["standard_key"]
+            step_type = step.get("type", "standard")
+
             try:
-                result = await workflow.execute_activity(
-                    execute_step_activity,
-                    StepInput(
-                        flow_id=input.flow_id,
-                        step_id=step_id,
-                        standard_key=standard_key,
-                        standard_overrides=input.standard_overrides.get(standard_key, {}),
-                        datasource_bindings=input.datasource_bindings,
-                        prev_results=step_results,
-                        actor=input.actor,
-                    ),
-                    start_to_close_timeout=timedelta(seconds=60),
-                )
-                step_results.append(result)
+                if step_type == "llm_judge":
+                    # V2: LLM 判断
+                    result = await workflow.execute_activity(
+                        llm_judge_activity,
+                        {
+                            "template_key": step.get("llm_template", "equipment_alert"),
+                            "context": {
+                                "flow_id": input.flow_id,
+                                "step_id": step_id,
+                                "standard_key": standard_key,
+                                "prev_results": step_results,
+                                "datasource_bindings": input.datasource_bindings,
+                            },
+                            "expected_schema": ["decision", "confidence", "reasoning"],
+                            "actor": input.actor,
+                            "run_id": run_id,
+                        },
+                        start_to_close_timeout=timedelta(seconds=120),
+                    )
+                    step_results.append(
+                        {
+                            "step_id": step_id,
+                            "standard_key": standard_key,
+                            "matched": result.get("decision", False),
+                            "output": result,
+                            "error": None,
+                        }
+                    )
+                else:
+                    # V1: 标准 step
+                    result = await workflow.execute_activity(
+                        execute_step_activity,
+                        StepInput(
+                            flow_id=input.flow_id,
+                            step_id=step_id,
+                            standard_key=standard_key,
+                            standard_overrides=input.standard_overrides.get(standard_key, {}),
+                            datasource_bindings=input.datasource_bindings,
+                            prev_results=step_results,
+                            actor=input.actor,
+                        ),
+                        start_to_close_timeout=timedelta(seconds=60),
+                    )
+                    step_results.append(result)
             except Exception as e:  # noqa: BLE001
                 status = "failed"
                 error = f"{type(e).__name__}: {e}"
