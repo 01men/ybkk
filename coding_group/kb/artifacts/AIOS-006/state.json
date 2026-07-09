@@ -1,0 +1,28 @@
+{
+  "req_id": "AIOS-006",
+  "title": "V5: mac (mdzx.fun) 实跑 5 道门禁",
+  "stage": "cancelled",
+  "stage_history": [
+    {"stage": "init", "started_at": "2026-07-09T15:00:00+08:00", "agent": "orchestrator", "note": "用户提供 mac 主机账号：xiaodaoqin@mdzx.fun / 201314"},
+    {"stage": "probe", "started_at": "2026-07-09T15:01:00+08:00", "agent": "orchestrator", "note": "下载 plink.exe + ssh 成功连上 mac 15.7.1 ARM64；环境探活：python3 ✓ / git ✓；缺 uv / pnpm / node / docker"},
+    {"stage": "setup", "started_at": "2026-07-09T15:05:00+08:00", "agent": "orchestrator", "note": "装 uv 0.11.28 + node v20.19.0 + pnpm 9.15.9；Docker Desktop .app 装着但 daemon 未启（GUI 弹窗未授权，非交互 SSH 无法点同意）"},
+    {"stage": "cancelled", "started_at": "2026-07-09T15:25:00+08:00", "agent": "orchestrator", "note": "用户取消：「算了，不在这台mac部署了」"}
+  ],
+  "current_stage": {
+    "name": "cancelled",
+    "completed_at": "2026-07-09T15:25:00+08:00",
+    "reason": "用户主动取消 mac 部署目标"
+  },
+  "blockers": [],
+  "artifacts": {
+    "00-product-brief.md": "present",
+    "state.json": "present"
+  },
+  "notes": [
+    "mac 主机 ssh 验证成功（plink + ed25519 fingerprint SHA256:15ByW4qxkuFcWmuPc5Ty+1aGi1Mm1FPHuCSCnlmN8VU）",
+    "mac 端已具备：python3 / git / uv 0.11.28 / node v20.19.0 / pnpm 9.15.9",
+    "mac 端缺：Docker Desktop daemon 启动（需 GUI 授权，非交互 SSH 无法完成）",
+    "结论：5 道门禁中的 baseline/coverage/lint 在 mac 上理论可跑，但 deploy-test 和 e2e 必须 docker，因此全套门禁无法在 mac 完成",
+    "建议替代部署路径：Linux 8C16G 客户机器 / 或 mac 上用户手动启 docker desktop 后再跑"
+  ]
+}
