@@ -1,18 +1,21 @@
 {
   "req_id": "AIOS-004",
   "title": "V3: 多租户 + RBAC + 监控告警 + V2 留尾（SEC/OPS）",
-  "stage": "design-done",
+  "stage": "shipped",
   "stage_history": [
     {"stage": "init", "started_at": "2026-07-09T13:08:00+08:00", "agent": "orchestrator", "note": "V3 范围：11 任务"},
     {"stage": "analyze", "started_at": "2026-07-09T13:12:00+08:00", "agent": "requirements-analyst", "note": "PRD 自评 84.2 通过"},
-    {"stage": "design", "started_at": "2026-07-09T13:18:00+08:00", "agent": "solution-architect", "note": "11 任务确认通过"}
+    {"stage": "design", "started_at": "2026-07-09T13:18:00+08:00", "agent": "solution-architect", "note": "11 任务确认通过"},
+    {"stage": "dev", "started_at": "2026-07-09T13:22:00+08:00", "agent": "developer", "note": "V3-001~V3-011 全部完成（含 V3-007 entrypoint.sh bug fix）"},
+    {"stage": "review", "started_at": "2026-07-09T14:00:00+08:00", "agent": "reviewer", "note": "0 阻塞项 + 5 非阻塞建议（V4 留尾）"},
+    {"stage": "verify", "started_at": "2026-07-09T14:05:00+08:00", "agent": "orchestrator", "note": "5 沙箱静态检查全过（AST/YAML/JSON/反注入/RBAC 矩阵）"},
+    {"stage": "ship", "started_at": "2026-07-09T14:10:00+08:00", "agent": "orchestrator", "note": "git commit 9e17bd7 + push main + 8 制品齐"}
   ],
   "current_stage": {
-    "name": "dev",
-    "assigned_agent": "developer",
-    "started_at": "2026-07-09T13:22:00+08:00",
-    "gate_required": "5 道门禁全过",
-    "gate_basis": "AGENTS.md §1 9 阶段状态机"
+    "name": "shipped",
+    "completed_at": "2026-07-09T14:10:00+08:00",
+    "git_commit": "9e17bd7",
+    "git_remote": "https://github.com/01men/ybkk"
   },
   "blockers": [],
   "artifacts": {
@@ -20,18 +23,31 @@
     "01-requirement-doc.md": "present",
     "02-design-doc.md": "present",
     "03-tasks.md": "present",
-    "04-code-changes.md": "pending",
-    "05-self-test-report.md": "pending",
-    "06-review-report.md": "pending",
-    "07-delivery-report.md": "pending",
-    "08-ship-log.md": "pending"
+    "04-code-changes.md": "present",
+    "05-self-test-report.md": "present",
+    "06-review-report.md": "present",
+    "07-delivery-report.md": "present",
+    "08-ship-log.md": "present"
   },
   "human_gates_hit": 0,
   "rejection_streak": 0,
-  "mcp_calls": [],
+  "mcp_calls": [
+    {"type": "git_push", "at": "2026-07-09T14:10:00+08:00", "target": "origin/main", "result": "ok", "commit": "9e17bd7"}
+  ],
+  "metrics": {
+    "files_changed": 52,
+    "insertions": 3438,
+    "deletions": 156,
+    "tasks_completed": 11,
+    "subtasks_completed": 41,
+    "airos_version": "0.4.0"
+  },
   "notes": [
-    "V3 范围：11 任务 (多租户/RBAC/监控/metrics/告警/SEC/OPS/前端/门禁/E2E/compose)",
+    "V3 范围：多租户/RBAC/监控/metrics/告警/SEC/OPS/前端/门禁/E2E/compose = 11 任务 / 41 子项",
     "V3 PRD 自评 84.2 通过",
-    "V3 dev 棒启动：11 任务 / 约 40 子项"
+    "V3 review 棒 0 阻塞项 + 5 非阻塞建议（V4 留尾）",
+    "V3 verify 棒 5 沙箱静态检查全过",
+    "V3 ship 棒：commit 9e17bd7 已 push main",
+    "AIOS_VERSION 0.3.0 -> 0.4.0"
   ]
 }
