@@ -10,7 +10,12 @@ from typing import Any
 
 from ..config import get_settings
 from ..errors import AiosError, ErrorCode
+from ..middleware.rbac import ROLE_PERMISSIONS
 from ..models import User, UserRole
+
+# V4: JWT 强制版本号。所有新 token 带 "ver": 4。
+# 旧 ver<4 的 token 一律拒绝（强制重新签发）。
+JWT_CURRENT_VERSION = 4
 
 
 def _sign(payload_bytes: bytes) -> bytes:
@@ -32,7 +37,10 @@ def encode_jwt(payload: dict[str, Any], ttl_seconds: int = 86400 * 7) -> str:
 
 
 def decode_jwt(token: str) -> dict[str, Any]:
-    """校验 + 解析 JWT。失败抛 E_AUTH_TOKEN_INVALID。"""
+    """校验 + 解析 JWT。失败抛 E_AUTH_TOKEN_INVALID。
+
+    V4: 校验 JWT_CURRENT_VERSION；旧 ver<4 的 token 一律拒绝。
+    """
     try:
         parts = token.split(".")
         if len(parts) != 3:
@@ -46,6 +54,10 @@ def decode_jwt(token: str) -> dict[str, Any]:
         body = json.loads(_b64url_decode(body_b64).decode("utf-8"))
         if body.get("exp", 0) < int(time.time()):
             raise ValueError("expired")
+        # V4 强制版本号校验
+        ver = int(body.get("ver", 0))
+        if ver < JWT_CURRENT_VERSION:
+            raise ValueError(f"token version {ver} < {JWT_CURRENT_VERSION}, please re-login")
         return body
     except Exception as e:
         raise AiosError(
@@ -94,14 +106,17 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def user_to_jwt(user: User, org_id: str = "", role_key: str = "") -> str:
-    """V1: 用 user 签发 JWT。V3: 加 org_id + role_key claims。
+    """V1: 用 user 签发 JWT。V3: 加 org_id + role_key claims。V4: 加 perms + ver。
 
     - sub: user.id
     - username: 登录名
     - role: V1 角色（UserRole enum；保留兼容）
     - org_id: V3 当前组织（多租户上下文）
     - role_key: V3 在该组织的角色（admin/engineer/operator/viewer）
+    - perms: V4 列表（按 role_key 解析 ROLE_PERMISSIONS，便于前端 /auth/me 直接用）
+    - ver: V4 JWT 版本号（decode_jwt 校验；旧 token 一律拒绝）
     """
+    perms: list[str] = sorted(ROLE_PERMISSIONS.get(role_key, frozenset()))
     return encode_jwt(
         {
             "sub": user.id,
@@ -109,6 +124,8 @@ def user_to_jwt(user: User, org_id: str = "", role_key: str = "") -> str:
             "role": user.role.value,
             "org_id": org_id,
             "role_key": role_key,
+            "perms": perms,
+            "ver": JWT_CURRENT_VERSION,
         }
     )
 
@@ -119,4 +136,5 @@ __all__ = [
     "hash_password",
     "verify_password",
     "user_to_jwt",
+    "JWT_CURRENT_VERSION",
 ]

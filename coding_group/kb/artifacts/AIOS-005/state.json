@@ -1,0 +1,35 @@
+{
+  "req_id": "AIOS-005",
+  "title": "V4: JWT 强制重新签发 + auth.py perms + orgs router 补漏 + console-shell 去兜底",
+  "stage": "shipped",
+  "stage_history": [
+    {"stage": "init", "started_at": "2026-07-09T14:30:00+08:00", "agent": "orchestrator", "note": "V4 范围：V3 review 留尾 #4 + #2"},
+    {"stage": "design", "started_at": "2026-07-09T14:32:00+08:00", "agent": "orchestrator", "note": "4 处改动：auth.py 加 ver/perms + login 解析默认 org + orgs router 补漏 + frontend 去兜底"},
+    {"stage": "dev", "started_at": "2026-07-09T14:35:00+08:00", "agent": "developer", "note": "5 文件改动 + 1 测试文件 + 1 新 router"},
+    {"stage": "review", "started_at": "2026-07-09T14:40:00+08:00", "agent": "orchestrator", "note": "0 阻塞项（V4 范围小，由 orchestrator 直接 review）"},
+    {"stage": "verify", "started_at": "2026-07-09T14:42:00+08:00", "agent": "orchestrator", "note": "AST 解析 5 文件全过"},
+    {"stage": "ship", "started_at": "2026-07-09T14:45:00+08:00", "agent": "orchestrator", "note": "git commit + push main"}
+  ],
+  "current_stage": {
+    "name": "shipped",
+    "completed_at": "2026-07-09T14:45:00+08:00",
+    "git_commit": "pending"
+  },
+  "blockers": [],
+  "artifacts": {
+    "00-product-brief.md": "present",
+    "01-requirement-doc.md": "present",
+    "02-design-doc.md": "present",
+    "03-tasks.md": "present",
+    "04-code-changes.md": "present",
+    "05-self-test-report.md": "present",
+    "06-review-report.md": "present",
+    "07-delivery-report.md": "present",
+    "08-ship-log.md": "present"
+  },
+  "notes": [
+    "V4 = V3 review 留尾 #4 (/auth/me 返回 perms) + #2 (JWT 强制重新签发)",
+    "额外修复：V3 漏注册 orgs router（前端调 /orgs 一直 404）",
+    "前端 console-shell 去掉 system.manage 兜底（直接用 me.perms）"
+  ]
+}

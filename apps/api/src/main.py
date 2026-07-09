@@ -8,7 +8,7 @@ from fastapi import FastAPI
 
 from .api.v1 import (
     health, datasources, auth, flows, flow_runs, audits, scenarios, internal,
-    ingest, ontology as ontology_api, llm,
+    ingest, ontology as ontology_api, llm, orgs,
     metrics as metrics_api,
 )
 from .config import get_settings
@@ -61,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(llm.router, prefix="/api/v1")
     # V3
     app.include_router(metrics_api.router)  # /metrics（不需要 /api/v1 前缀，Prometheus 习惯）
+    app.include_router(orgs.router, prefix="/api/v1")  # V4: V3 漏注册，补上
 
     return app
 

@@ -52,17 +52,13 @@ export default function ConsoleShell({ children }: { children: React.ReactNode }
     api.get('/auth/me').catch(() => router.push('/login'));
   }, [router]);
 
-  // V3: 当前用户的 perms
+  // V3+V4: 当前用户的 perms（V4 后端 /auth/me 直接返回 perms 列表，无需前端兜底）
   const { data: me } = useQuery({
     queryKey: ['me'],
     queryFn: async () => (await api.get<{ role_key: string; perms: string[] }>('/auth/me')).data,
     retry: false,
   });
   const myPerms = new Set(me?.perms ?? []);
-  // V3: 兜底：若 /auth/me 没返回 perms，按 V0 的 role 给个全集（admin/operator/viewer）
-  if (myPerms.size === 0 && me?.role_key) {
-    myPerms.add('system.manage');  // V0 admin 默认全开
-  }
 
   // V3: 我的组织列表（顶部切换器）
   const { data: orgs } = useQuery({
