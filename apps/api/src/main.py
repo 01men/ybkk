@@ -1,4 +1,4 @@
-"""FastAPI 应用入口（参见 TASK-003 / TASK-013）。"""
+"""FastAPI 应用入口（参见 TASK-003 / TASK-013 / V1 §3）。"""
 from __future__ import annotations
 
 import logging
@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from .api.v1 import health, datasources
+from .api.v1 import health, datasources, auth, flows, flow_runs, audits, scenarios, internal
 from .config import get_settings
 from .db import dispose_engine, init_engine
 from .middleware import error_handler_middleware, request_id_middleware
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
 def create_app() -> FastAPI:
     app = FastAPI(
         title="元冰可可 AIOS API",
-        version="0.1.0",
+        version="0.2.0",
         lifespan=lifespan,
         docs_url="/docs",
         redoc_url="/redoc",
@@ -43,7 +43,13 @@ def create_app() -> FastAPI:
 
     # 路由
     app.include_router(health.router, prefix="/api/v1")
+    app.include_router(auth.router, prefix="/api/v1")
     app.include_router(datasources.router, prefix="/api/v1")
+    app.include_router(scenarios.router, prefix="/api/v1")
+    app.include_router(flows.router, prefix="/api/v1")
+    app.include_router(flow_runs.router, prefix="/api/v1")
+    app.include_router(audits.router, prefix="/api/v1")
+    app.include_router(internal.router, prefix="/api/v1")
 
     return app
 

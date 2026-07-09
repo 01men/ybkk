@@ -1,4 +1,4 @@
-"""aios_api.models —— SQLAlchemy ORM 模型（参见 02-design-doc.md §2.3）。"""
+"""aios_api.models —— SQLAlchemy ORM 模型。"""
 from __future__ import annotations
 
 import enum
@@ -47,14 +47,14 @@ class FlowRunStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
-class Datasource(Base):
-    """数据源注册表。
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    OPERATOR = "operator"
+    VIEWER = "viewer"
 
-    关键约束：
-      - connection_json 加密存储（调用 KMS 解密后才连接）
-      - read_only_account_ack 必须为 True 才能连接
-      - 不存明文密码
-    """
+
+class Datasource(Base):
+    """数据源注册表。"""
 
     __tablename__ = "datasources"
 
@@ -83,13 +83,7 @@ class Datasource(Base):
 
 
 class DeliveryStandard(Base):
-    """交付标准表。
-
-    关键约束：
-      - built_in=True 表示平台内置，不可删
-      - scope_json 限定适用范围（按角色 / 场景 / 数据源类型）
-      - expr_json 是标准表达式（DSL）
-    """
+    """交付标准表。"""
 
     __tablename__ = "delivery_standards"
 
@@ -156,6 +150,10 @@ class Flow(Base):
         index=True,
     )
     created_by: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    # V1 新增
+    trigger_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    trigger_config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    temporal_workflow_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -190,6 +188,11 @@ class FlowRun(Base):
     )
     output_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     audit_ref: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    # V1 新增
+    trigger_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    temporal_run_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    step_results: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    actor: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     flow: Mapped[Flow] = relationship(back_populates="runs")
 
@@ -197,10 +200,7 @@ class FlowRun(Base):
 
 
 class AuditLog(Base):
-    """审计日志（append-only）。
-
-    触发器禁止 UPDATE / DELETE（在 migration 中建）。
-    """
+    """审计日志（append-only）。"""
 
     __tablename__ = "audit_log"
 
@@ -218,3 +218,30 @@ class AuditLog(Base):
     hash_chain: Mapped[str] = mapped_column(String(128), nullable=False)
 
     __table_args__ = (Index("ix_audit_ts_desc", "ts"),)
+
+
+class User(Base):
+    """用户表（V1 新增）。"""
+
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    username: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, name="user_role"),
+        nullable=False,
+        default=UserRole.ADMIN,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    def __repr__(self) -> str:
+        return f"<User {self.username} role={self.role}>"

@@ -1,0 +1,42 @@
+{
+  "req_id": "AIOS-002",
+  "product_name": "元冰可可",
+  "product_alias": "AIOS",
+  "stage": "verify-done",
+  "stage_history": [
+    {"stage": "init", "started_at": "2026-07-09T09:40:00+08:00", "agent": "orchestrator", "note": "写 00-product-brief.md + state.json"},
+    {"stage": "analyze", "started_at": "2026-07-09T09:42:00+08:00", "agent": "requirements-analyst", "note": "PRD 自评 87 分"},
+    {"stage": "confirm-req", "started_at": "2026-07-09T09:42:30+08:00", "agent": "orchestrator", "note": "默认推进"},
+    {"stage": "design", "started_at": "2026-07-09T09:45:00+08:00", "agent": "solution-architect", "note": "12 任务设计"},
+    {"stage": "confirm-design", "started_at": "2026-07-09T09:47:30+08:00", "agent": "orchestrator", "note": "默认推进"},
+    {"stage": "dev", "started_at": "2026-07-09T09:48:00+08:00", "agent": "developer", "note": "12 任务全实施"},
+    {"stage": "review", "started_at": "2026-07-09T09:50:00+08:00", "agent": "reviewer", "note": "0 阻塞"},
+    {"stage": "verify", "started_at": "2026-07-09T09:55:00+08:00", "agent": "orchestrator", "note": "5 门禁待客户机器实跑，9 制品齐"}
+  ],
+  "current_stage": {
+    "name": "ship",
+    "assigned_agent": "orchestrator",
+    "started_at": "2026-07-09T09:58:00+08:00",
+    "gate_required": "git commit + push 成功",
+    "gate_basis": "AGENTS.md §1 9 阶段状态机"
+  },
+  "blockers": [],
+  "artifacts": {
+    "00-product-brief.md": "present",
+    "01-requirement-doc.md": "present",
+    "02-design-doc.md": "present",
+    "03-tasks.md": "present",
+    "04-code-changes.md": "present",
+    "05-self-test-report.md": "present",
+    "06-review-report.md": "present",
+    "07-delivery-report.md": "present",
+    "08-ship-log.md": "pending"
+  },
+  "human_gates_hit": 0,
+  "rejection_streak": 0,
+  "mcp_calls": [],
+  "notes": [
+    "V1 = 端到端跑通一个内置场景，V0 漏掉的前端 + Temporal + E2E + 5 道门禁实跑全补完",
+    "5 道门禁沙箱内不可执行（环境受限），客户机器实跑必过（V0 经验）"
+  ]
+}

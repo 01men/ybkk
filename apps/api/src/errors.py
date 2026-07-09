@@ -48,6 +48,9 @@ class ErrorCode(str, Enum):
     E_AUTH_UNAUTHORIZED = "E_AUTH_UNAUTHORIZED"
     E_AUTH_FORBIDDEN = "E_AUTH_FORBIDDEN"
     E_AUTH_TOKEN_EXPIRED = "E_AUTH_TOKEN_EXPIRED"
+    E_AUTH_REQUIRED = "E_AUTH_REQUIRED"
+    E_AUTH_INVALID_CRED = "E_AUTH_INVALID_CRED"
+    E_AUTH_TOKEN_INVALID = "E_AUTH_TOKEN_INVALID"
 
     # 校验（E_VAL_*）
     E_VAL_REQUIRED = "E_VAL_REQUIRED"
@@ -86,7 +89,13 @@ class AiosError(Exception):
     @staticmethod
     def _default_http_status(code: ErrorCode) -> int:
         if code.value.startswith("E_AUTH_"):
-            if code == ErrorCode.E_AUTH_UNAUTHORIZED or code == ErrorCode.E_AUTH_TOKEN_EXPIRED:
+            if code in (
+                ErrorCode.E_AUTH_UNAUTHORIZED,
+                ErrorCode.E_AUTH_TOKEN_EXPIRED,
+                ErrorCode.E_AUTH_REQUIRED,
+                ErrorCode.E_AUTH_INVALID_CRED,
+                ErrorCode.E_AUTH_TOKEN_INVALID,
+            ):
                 return status.HTTP_401_UNAUTHORIZED
             return status.HTTP_403_FORBIDDEN
         if code.value.startswith("E_VAL_"):

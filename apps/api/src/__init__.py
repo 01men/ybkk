@@ -1,1 +1,1 @@
-"""aios_api —— 命名空间包根。"""
+"""aios_api FastAPI 后端包根。"""
