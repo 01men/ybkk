@@ -48,3 +48,18 @@
   - 触发原因: 从零开始按个人编程 Agent 团队搭建方案落地
   - 影响面: 全部
   - 回滚方法: `git revert` 这次 commit，或在 git 历史里找回上一个稳定版本
+
+- 2026-07-09：V1 交付完成（AIOS-002）。
+  - 改动: 落地元冰可可 AIOS V1 —— JWT + PBKDF2 鉴权、9 个 V1 API（auth / scenarios / flows / flow_runs / audits / internal）、migration 0003_v1_core、apps/flow_engine 全新包（Temporal worker + 17 step handlers）、apps/web 全新 Next.js 14 前端（控制台 + 9 页面 + 5 E2E）、docker-compose V1 升级到 11 核心服务、5 道门禁就位
+  - 触发原因: V0 完成后用户要求「继续」进入 V1；9 阶段状态机跑通；commit ab9bb98
+  - 影响面: 仓库根 + apps/api + apps/flow_engine + apps/web + deploy/compose
+  - 回滚方法: `git revert` V1 commits（b6603a2 + ab9bb98）
+
+- 2026-07-09：V2 交付完成（AIOS-003）。
+  - 改动: 落地元冰可可 AIOS V2 —— 多源摄取（apps/ingest 全新：4 类 parser：Excel / PDF / 会议 / Markdown）、本体图（apps/ontology 全新：10 节点 + 12 关系 + LLM 实体+关系抽取 + 字段映射）、LLM judge（flow_engine 新 activity + 15 单测 + 3 内置模板）、migration 0004_v2_ingest（ingest_jobs / llm_calls / ontology_field_mappings）、6 新前端页面（数据接入 / 任务列表 / 任务详情 / 本体浏览 / 节点详情 / LLM 用量）、5 新 E2E、docker-compose V2 升级（加 ollama 服务 + 独立 ingest/ontology image）、gate-deploy-test V2 补丁（ingest/ontology/ollama health）、Neo4j iframe 折叠面板
+  - 触发原因: V1 完成后用户要求「继续推进 V2」；9 阶段状态机跑通；commit 42fdc50 + 12435d0
+  - 影响面: 仓库根 + apps/api（3 路由 + 1 migration + models 加 3 类）+ apps/ingest（V2 全新）+ apps/ontology（V2 全新）+ apps/flow_engine（1 新 activity + 1 workflow 改）+ apps/web（6 页面 + console-shell 加 3 菜单 + 5 E2E）+ deploy/compose（V2 升级）+ coding_group/assets/scripts/gate-deploy-test.sh
+  - 单测: 30/30 通过（6 ingest + 9 ontology + 15 flow_engine）
+  - Review: 0 阻塞 / 4 V3 建议
+  - 回滚方法: `git revert` V2 commits（42fdc50 + 12435d0）
+  - V3 留尾: SEC/TS/OPS 共 4 项 + 多租户 RBAC + 监控告警 + ASR 自训练 + 本体在线学习
