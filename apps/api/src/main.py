@@ -1,4 +1,4 @@
-"""FastAPI 应用入口（V2 含 ingest/ontology/llm 路由）。"""
+"""FastAPI 应用入口（V3 含 metrics 端点）。"""
 from __future__ import annotations
 
 import logging
@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from .api.v1 import (
     health, datasources, auth, flows, flow_runs, audits, scenarios, internal,
     ingest, ontology as ontology_api, llm,
+    metrics as metrics_api,
 )
 from .config import get_settings
 from .db import dispose_engine, init_engine
@@ -34,7 +35,7 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
 def create_app() -> FastAPI:
     app = FastAPI(
         title="元冰可可 AIOS API",
-        version="0.3.0",
+        version="0.4.0",
         lifespan=lifespan,
         docs_url="/docs",
         redoc_url="/redoc",
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
     # 中间件
     request_id_middleware(app)
     error_handler_middleware(app)
+    app.middleware("http")(metrics_api.metrics_middleware)  # V3: 自动 metrics
 
     # 路由
     app.include_router(health.router, prefix="/api/v1")
@@ -57,6 +59,8 @@ def create_app() -> FastAPI:
     app.include_router(ingest.router, prefix="/api/v1")
     app.include_router(ontology_api.router, prefix="/api/v1")
     app.include_router(llm.router, prefix="/api/v1")
+    # V3
+    app.include_router(metrics_api.router)  # /metrics（不需要 /api/v1 前缀，Prometheus 习惯）
 
     return app
 

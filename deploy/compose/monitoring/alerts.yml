@@ -1,0 +1,68 @@
+groups:
+  - name: aios_alerts
+    interval: 30s
+    rules:
+      # 1) API 5xx 率 > 1% 持续 5min
+      - alert: AiosApiHighErrorRate
+        expr: |
+          sum(rate(aios_api_request_total{status=~"5.."}[5m]))
+          /
+          sum(rate(aios_api_request_total[5m]))
+          > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AIOS API 5xx 错误率 > 1%"
+          description: "5min 错误率 {{ $value | humanizePercentage }}，请检查 API 日志"
+
+      # 2) Flow 失败率 > 20% 持续 10min
+      - alert: AiosFlowHighFailureRate
+        expr: |
+          sum(rate(aios_flow_run_total{status="failed"}[10m]))
+          /
+          sum(rate(aios_flow_run_total[10m]))
+          > 0.20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AIOS Flow 失败率 > 20%"
+
+      # 3) Ollama 不可达
+      - alert: AiosOllamaDown
+        expr: up{job="aios-ollama"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AIOS Ollama 不可达 (已 2min)"
+
+      # 4) Ingest job 失败 > 3 次/小时
+      - alert: AiosIngestHighFailure
+        expr: |
+          sum by (kind) (rate(aios_ingest_job_total{status="failed"}[1h]))
+          > (3 / 3600)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AIOS Ingest 失败率高 ({{ $labels.kind }})"
+
+      # 5) Neo4j 不可达
+      - alert: AiosNeo4jDown
+        expr: up{job="aios-ontology"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AIOS Neo4j 不可达 (已 2min)"
+
+      # 6) LLM 注入攻击
+      - alert: AiosLLMInjectionAttempts
+        expr: rate(aios_llm_injection_blocked_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AIOS LLM 检测到 prompt injection 尝试"

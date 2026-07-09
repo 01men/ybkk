@@ -32,6 +32,10 @@ for pyproj in $(find . -name pyproject.toml -not -path './node_modules/*' -not -
         if ! (cd "$proj_dir" && ruff check src tests) > /tmp/lint-ruff.log 2>&1; then
             failures+=("lint:ruff-failed-at-$proj_dir")
         fi
+        # V3: ruff S 系列（bandit 安全规则）—— 硬编码密码 / 不安全 hash / assert 用作校验
+        if ! (cd "$proj_dir" && ruff check --select S src tests) > /tmp/lint-ruff-s.log 2>&1; then
+            failures+=("lint:ruff-security-failed-at-$proj_dir")
+        fi
     fi
 done
 

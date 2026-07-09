@@ -1,0 +1,37 @@
+{
+  "req_id": "AIOS-004",
+  "title": "V3: 多租户 + RBAC + 监控告警 + V2 留尾（SEC/OPS）",
+  "stage": "design-done",
+  "stage_history": [
+    {"stage": "init", "started_at": "2026-07-09T13:08:00+08:00", "agent": "orchestrator", "note": "V3 范围：11 任务"},
+    {"stage": "analyze", "started_at": "2026-07-09T13:12:00+08:00", "agent": "requirements-analyst", "note": "PRD 自评 84.2 通过"},
+    {"stage": "design", "started_at": "2026-07-09T13:18:00+08:00", "agent": "solution-architect", "note": "11 任务确认通过"}
+  ],
+  "current_stage": {
+    "name": "dev",
+    "assigned_agent": "developer",
+    "started_at": "2026-07-09T13:22:00+08:00",
+    "gate_required": "5 道门禁全过",
+    "gate_basis": "AGENTS.md §1 9 阶段状态机"
+  },
+  "blockers": [],
+  "artifacts": {
+    "00-product-brief.md": "present",
+    "01-requirement-doc.md": "present",
+    "02-design-doc.md": "present",
+    "03-tasks.md": "present",
+    "04-code-changes.md": "pending",
+    "05-self-test-report.md": "pending",
+    "06-review-report.md": "pending",
+    "07-delivery-report.md": "pending",
+    "08-ship-log.md": "pending"
+  },
+  "human_gates_hit": 0,
+  "rejection_streak": 0,
+  "mcp_calls": [],
+  "notes": [
+    "V3 范围：11 任务 (多租户/RBAC/监控/metrics/告警/SEC/OPS/前端/门禁/E2E/compose)",
+    "V3 PRD 自评 84.2 通过",
+    "V3 dev 棒启动：11 任务 / 约 40 子项"
+  ]
+}

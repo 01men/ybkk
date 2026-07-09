@@ -93,12 +93,22 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def user_to_jwt(user: User) -> str:
+def user_to_jwt(user: User, org_id: str = "", role_key: str = "") -> str:
+    """V1: 用 user 签发 JWT。V3: 加 org_id + role_key claims。
+
+    - sub: user.id
+    - username: 登录名
+    - role: V1 角色（UserRole enum；保留兼容）
+    - org_id: V3 当前组织（多租户上下文）
+    - role_key: V3 在该组织的角色（admin/engineer/operator/viewer）
+    """
     return encode_jwt(
         {
             "sub": user.id,
             "username": user.username,
             "role": user.role.value,
+            "org_id": org_id,
+            "role_key": role_key,
         }
     )
 

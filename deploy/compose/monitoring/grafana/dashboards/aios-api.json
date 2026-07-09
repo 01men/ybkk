@@ -1,0 +1,26 @@
+{
+  "title": "AIOS - API",
+  "uid": "aios-api",
+  "panels": [
+    {
+      "id": 1, "type": "graph", "title": "API 请求速率（按 path）",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [{"expr": "sum by (path) (rate(aios_api_request_total[1m]))", "legendFormat": "{{path}}"}]
+    },
+    {
+      "id": 2, "type": "graph", "title": "API P95 延迟",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le) (rate(aios_api_request_duration_seconds_bucket[5m])))", "legendFormat": "p95"}]
+    },
+    {
+      "id": 3, "type": "graph", "title": "API 5xx 错误率",
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "sum(rate(aios_api_request_total{status=~\"5..\"}[5m])) / sum(rate(aios_api_request_total[5m]))", "legendFormat": "5xx rate"}]
+    },
+    {
+      "id": 4, "type": "stat", "title": "当前 QPS",
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "sum(rate(aios_api_request_total[1m]))"}]
+    }
+  ]
+}

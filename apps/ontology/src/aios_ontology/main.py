@@ -6,12 +6,13 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query, Response
 from neo4j import GraphDatabase
 from pydantic import BaseModel
 
 from .config import get_settings
 from .extractor import extract_entities, extract_relations
+from .metrics import OLLAMA_UP, ONTOLOGY_NODE_TOTAL, render as render_metrics  # V3
 from .schema import init_schema
 
 logger = logging.getLogger("aios_ontology.api")
@@ -34,7 +35,7 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     app.state.driver.close()
 
 
-app = FastAPI(title="aios-ontology", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="aios-ontology", version="0.3.0", lifespan=lifespan)
 
 
 class NodeResponse(BaseModel):
@@ -56,6 +57,14 @@ class CypherRequest(BaseModel):
 @app.get("/health")
 async def health() -> dict:
     return {"ok": True}
+
+
+@app.get("/metrics", include_in_schema=False)  # V3
+async def metrics() -> Response:
+    return Response(
+        content=render_metrics(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 @app.get("/nodes", response_model=list[NodeResponse])

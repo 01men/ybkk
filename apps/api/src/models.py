@@ -318,3 +318,66 @@ class OntologyFieldMapping(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+
+# V3 新增 ----------------------------------------------------------
+
+
+class Org(Base):
+    """组织（V3 多租户）。"""
+
+    __tablename__ = "orgs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    slug: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    def __repr__(self) -> str:
+        return f"<Org {self.slug}>"
+
+
+class OrgMember(Base):
+    """组织成员（V3）。"""
+
+    __tablename__ = "org_members"
+
+    org_id: Mapped[str] = mapped_column(String(64), ForeignKey("orgs.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(64), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    role_key: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class Role(Base):
+    """RBAC 角色（V3）。"""
+
+    __tablename__ = "roles"
+
+    key: Mapped[str] = mapped_column(String(32), primary_key=True)
+    label: Mapped[str] = mapped_column(String(64), nullable=False)
+    level: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class Permission(Base):
+    """RBAC 权限点（V3）。"""
+
+    __tablename__ = "permissions"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+
+
+class RolePermission(Base):
+    """角色-权限关联（V3）。"""
+
+    __tablename__ = "role_permissions"
+
+    role_key: Mapped[str] = mapped_column(
+        String(32), ForeignKey("roles.key", ondelete="CASCADE"), primary_key=True
+    )
+    perm_key: Mapped[str] = mapped_column(
+        String(64), ForeignKey("permissions.key", ondelete="CASCADE"), primary_key=True
+    )

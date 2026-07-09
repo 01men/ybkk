@@ -1,0 +1,12 @@
+{
+  "title": "AIOS - Ingest",
+  "uid": "aios-ingest",
+  "panels": [
+    {"id": 1, "type": "graph", "title": "Ingest 任务速率（按 kind / status）",
+     "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+     "targets": [{"expr": "sum by (kind, status) (rate(aios_ingest_job_total[5m]))", "legendFormat": "{{kind}}/{{status}}"}]},
+    {"id": 2, "type": "stat", "title": "总任务数",
+     "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+     "targets": [{"expr": "sum(aios_ingest_job_total)"}]}
+  ]
+}

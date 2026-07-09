@@ -1,0 +1,15 @@
+{
+  "title": "AIOS - Flow",
+  "uid": "aios-flow",
+  "panels": [
+    {"id": 1, "type": "graph", "title": "Flow run 总数（按 status）",
+     "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+     "targets": [{"expr": "sum by (status) (rate(aios_flow_run_total[5m]))", "legendFormat": "{{status}}"}]},
+    {"id": 2, "type": "graph", "title": "Flow 失败率",
+     "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+     "targets": [{"expr": "sum(rate(aios_flow_run_total{status=\"failed\"}[5m])) / sum(rate(aios_flow_run_total[5m]))", "legendFormat": "fail rate"}]},
+    {"id": 3, "type": "graph", "title": "Step P95 耗时",
+     "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8},
+     "targets": [{"expr": "histogram_quantile(0.95, sum by (le, step_id) (rate(aios_flow_step_duration_seconds_bucket[5m])))", "legendFormat": "{{step_id}}"}]}
+  ]
+}

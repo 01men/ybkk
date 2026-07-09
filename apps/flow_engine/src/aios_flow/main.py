@@ -5,12 +5,13 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from pydantic import BaseModel
 
 from temporalio.client import Client
 
 from .config import get_settings
+from .metrics import render as render_metrics  # V3
 from .triggers.schedule import start_workflow
 
 logger = logging.getLogger("aios_flow.api")
@@ -31,7 +32,7 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
     yield
 
 
-app = FastAPI(title="aios-flow-engine", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="aios-flow-engine", version="0.3.0", lifespan=lifespan)
 
 
 class StartWorkflowRequest(BaseModel):
@@ -46,6 +47,14 @@ class StartWorkflowRequest(BaseModel):
 @app.get("/health")
 async def health() -> dict:
     return {"ok": True}
+
+
+@app.get("/metrics", include_in_schema=False)  # V3
+async def metrics() -> Response:
+    return Response(
+        content=render_metrics(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 @app.post("/workflows/start")

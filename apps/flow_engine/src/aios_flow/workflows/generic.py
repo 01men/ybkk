@@ -75,9 +75,9 @@ async def llm_judge_activity(payload: dict) -> dict:
     """
     from .activities.llm_judge import LLMJudgeInput, llm_judge, get_template
 
-    template = get_template(payload.get("template_key", "equipment_alert"))
+    user_prompt = get_template(payload.get("template_key", "equipment_alert"))
     inp = LLMJudgeInput(
-        prompt=template,
+        user_prompt=user_prompt,  # V3 SEC-V3-01: 业务模板走 user
         context=payload.get("context", {}),
         expected_schema=payload.get("expected_schema", []),
         actor=payload.get("actor", "system"),
@@ -91,6 +91,7 @@ async def llm_judge_activity(payload: dict) -> dict:
         "raw_response": result.raw_response,
         "duration_ms": result.duration_ms,
         "llm_call_id": result.llm_call_id,
+        "blocked": result.blocked,
     }
 
 

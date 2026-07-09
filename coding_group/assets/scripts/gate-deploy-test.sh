@@ -52,11 +52,34 @@ if [ -f "deploy/compose/docker-compose.yml" ]; then
                         v2_ok=0
                     fi
                 fi
+
+                # V3: 额外检查 monitoring 组件（仅在 --profile monitoring 启用时）
+                if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "aios_prometheus_1"; then
+                    if ! curl -sf "http://localhost:9090/-/healthy" > /dev/null; then
+                        echo "⚠️  prometheus 健康检查失败"
+                        v2_ok=0
+                    fi
+                fi
+                if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "aios_grafana_1"; then
+                    if ! curl -sf "http://localhost:3000/api/health" > /dev/null; then
+                        echo "⚠️  grafana 健康检查失败"
+                        v2_ok=0
+                    fi
+                fi
+                # V3 OPS-V3-02：验证 ollama qwen2.5:7b 模型已 pull
+                if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "aios_ollama_1"; then
+                    if ! curl -sf "http://localhost:11434/api/tags" 2>/dev/null \
+                        | grep -q "qwen2.5:7b"; then
+                        echo "⚠️  ollama qwen2.5:7b 模型未 pull"
+                        v2_ok=0
+                    fi
+                fi
+
                 if [ "$v2_ok" -eq 1 ]; then
                     [ "${1:-}" = "--capture" ] && echo "{\"failures\":[], \"url\":\"${DEPLOY_URL}\"}"
                     exit 0
                 else
-                    [ "${1:-}" = "--capture" ] && echo '{"failures":["v2-health-degraded"]}'
+                    [ "${1:-}" = "--capture" ] && echo '{"failures":["v3-health-degraded"]}'
                     exit 1
                 fi
             fi

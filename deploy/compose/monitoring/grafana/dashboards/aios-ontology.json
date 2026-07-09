@@ -1,0 +1,15 @@
+{
+  "title": "AIOS - Ontology & System",
+  "uid": "aios-ontology",
+  "panels": [
+    {"id": 1, "type": "graph", "title": "本体节点数（按 kind）",
+     "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+     "targets": [{"expr": "aios_ontology_node_total", "legendFormat": "{{kind}}"}]},
+    {"id": 2, "type": "stat", "title": "Ollama 在线",
+     "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+     "targets": [{"expr": "aios_ollama_up"}]},
+    {"id": 3, "type": "graph", "title": "容器 CPU（cadvisor）",
+     "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8},
+     "targets": [{"expr": "rate(container_cpu_usage_seconds_total{name=~\"aios_.*\"}[5m])", "legendFormat": "{{name}}"}]}
+  ]
+}
