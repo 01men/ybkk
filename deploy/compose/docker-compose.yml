@@ -21,7 +21,10 @@ services:
   # 控制台（前端 V3）
   # ---------------------------------------------------------------------------
   web:
-    image: ghcr.io/01men/ybkk-web:${AIOS_VERSION:-0.4.0}
+    image: ybkk-web:${AIOS_VERSION:-0.4.0}
+    build:
+      context: ../../apps/web
+      dockerfile: Dockerfile
     <<: *common-env
     container_name: aios_web_1
     ports:
@@ -39,7 +42,10 @@ services:
   # API（后端 V3：多租户 + RBAC + /metrics）
   # ---------------------------------------------------------------------------
   api:
-    image: ghcr.io/01men/ybkk-api:${AIOS_VERSION:-0.4.0}
+    image: ybkk-api:${AIOS_VERSION:-0.4.0}
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile
     <<: *common-env
     container_name: aios_api_1
     ports:
@@ -72,7 +78,10 @@ services:
   # 数据接入 worker (V3：org_id 隔离 + /metrics)
   # ---------------------------------------------------------------------------
   ingest:
-    image: ghcr.io/01men/ybkk-ingest:${AIOS_VERSION:-0.4.0}
+    image: ybkk-ingest:${AIOS_VERSION:-0.4.0}
+    build:
+      context: ../../apps/ingest
+      dockerfile: Dockerfile
     <<: *common-env
     container_name: aios_ingest_1
     command: ["uv", "run", "python", "-m", "aios_ingest.worker"]
@@ -95,7 +104,10 @@ services:
   # 本体图服务 (V3：org_id 隔离 + /metrics)
   # ---------------------------------------------------------------------------
   ontology:
-    image: ghcr.io/01men/ybkk-ontology:${AIOS_VERSION:-0.4.0}
+    image: ybkk-ontology:${AIOS_VERSION:-0.4.0}
+    build:
+      context: ../../apps/ontology
+      dockerfile: Dockerfile
     <<: *common-env
     container_name: aios_ontology_1
     command: ["uv", "run", "python", "-m", "aios_ontology.worker"]
@@ -116,7 +128,10 @@ services:
   # Flow Engine (V3：/metrics + 反 prompt injection)
   # ---------------------------------------------------------------------------
   flow-engine:
-    image: ghcr.io/01men/ybkk-flow-engine:${AIOS_VERSION:-0.4.0}
+    image: ybkk-flow-engine:${AIOS_VERSION:-0.4.0}
+    build:
+      context: ../../apps/flow_engine
+      dockerfile: Dockerfile
     <<: *common-env
     container_name: aios_flow_engine_1
     ports:
@@ -261,7 +276,10 @@ services:
   # Ollama (V3：apps/ollama 独立 image + entrypoint 自动 pull qwen2.5:7b)
   # ---------------------------------------------------------------------------
   ollama:
-    image: ghcr.io/01men/ybkk-ollama:${AIOS_VERSION:-0.4.0}
+    image: ybkk-ollama:${AIOS_VERSION:-0.4.0}
+    build:
+      context: ../../apps/ollama
+      dockerfile: Dockerfile
     container_name: aios_ollama_1
     restart: unless-stopped
     networks:
