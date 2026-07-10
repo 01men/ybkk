@@ -47,5 +47,5 @@ COPY alembic.ini ./alembic.ini
 COPY src ./src
 
 # CMD: 先 alembic upgrade，再 init admin，最后 uvicorn
-# uvicorn 启动 src.main:app（hatchling 把 src 装成 'src' 包）
-CMD ["sh", "-c", "alembic upgrade head && cd /app/src && python setup_default_admin.py 2>/dev/null; cd /app/src && uvicorn main:app --host 0.0.0.0 --port 8000"]
+# uvicorn 启动 src.main:app（src 是 hatchling wheel 装到 site-packages/src 的包）
+CMD ["sh", "-c", "alembic upgrade head && cd /app/src && python setup_default_admin.py 2>/dev/null; uvicorn src.main:app --host 0.0.0.0 --port 8000"]
