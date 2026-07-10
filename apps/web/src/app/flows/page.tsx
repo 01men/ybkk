@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { ProTable, ProColumns } from '@ant-design/pro-components';
 import { App, Button, Tag } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import ConsoleShell from '../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 type Flow = {
@@ -30,31 +30,31 @@ export default function FlowsPage() {
   const trigger = async (id: string) => {
     try {
       await api.post(`/flows/${id}/trigger`);
-      message.success('已触发');
+      message.success('宸茶Е鍙?);
       qc.invalidateQueries({ queryKey: ['flows'] });
     } catch (e: unknown) {
       const m = (e as { response?: { data?: { error?: { message?: string } } } })
-        ?.response?.data?.error?.message ?? '触发失败';
+        ?.response?.data?.error?.message ?? '瑙﹀彂澶辫触';
       message.error(m);
     }
   };
 
   const columns: ProColumns<Flow>[] = [
     { title: 'ID', dataIndex: 'id', width: 220, ellipsis: true },
-    { title: '场景 ID', dataIndex: 'scenario_id', width: 220, ellipsis: true },
+    { title: '鍦烘櫙 ID', dataIndex: 'scenario_id', width: 220, ellipsis: true },
     {
-      title: '状态', dataIndex: 'status', width: 100,
+      title: '鐘舵€?, dataIndex: 'status', width: 100,
       render: (_, r) => <Tag color={r.status === 'active' ? 'green' : 'default'}>{r.status}</Tag>,
     },
-    { title: '触发器', dataIndex: 'trigger_type', width: 100 },
-    { title: '创建人', dataIndex: 'created_by', width: 100 },
-    { title: '创建时间', dataIndex: 'created_at', valueType: 'dateTime', width: 180 },
+    { title: '瑙﹀彂鍣?, dataIndex: 'trigger_type', width: 100 },
+    { title: '鍒涘缓浜?, dataIndex: 'created_by', width: 100 },
+    { title: '鍒涘缓鏃堕棿', dataIndex: 'created_at', valueType: 'dateTime', width: 180 },
     {
-      title: '操作', valueType: 'option', width: 200,
+      title: '鎿嶄綔', valueType: 'option', width: 200,
       render: (_, r) => [
-        <a key="runs" onClick={() => router.push(`/flows/${r.id}/runs`)}>查看运行</a>,
+        <a key="runs" onClick={() => router.push(`/flows/${r.id}/runs`)}>鏌ョ湅杩愯</a>,
         r.trigger_type === 'manual' ? (
-          <Button key="trigger" type="link" onClick={() => trigger(r.id)}>触发</Button>
+          <Button key="trigger" type="link" onClick={() => trigger(r.id)}>瑙﹀彂</Button>
         ) : null,
       ],
     },
@@ -63,7 +63,7 @@ export default function FlowsPage() {
   return (
     <ConsoleShell>
       <ProTable<Flow>
-        headerTitle="业务流程"
+        headerTitle="涓氬姟娴佺▼"
         loading={isLoading}
         dataSource={data ?? []}
         columns={columns}

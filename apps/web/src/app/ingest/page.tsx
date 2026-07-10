@@ -1,40 +1,40 @@
-'use client';
+﻿'use client';
 
 import { App, Button, Card, Col, Form, Row, Select, Space, Tabs, Tag, Typography, Upload } from 'antd';
 import { UploadOutlined, FileExcelOutlined, FilePdfOutlined, AudioOutlined, FileTextOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import ConsoleShell from '../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 const KIND_META: Record<string, { label: string; color: string; icon: React.ReactNode; accept: string; desc: string }> = {
   excel: {
-    label: 'Excel 表格',
+    label: 'Excel 琛ㄦ牸',
     color: 'green',
     icon: <FileExcelOutlined />,
     accept: '.xlsx,.xls',
-    desc: '物料主数据、库存数据、供应商清单。系统自动识别表头 + 推断列类型，提取 Material/Supplier 节点。',
+    desc: '鐗╂枡涓绘暟鎹€佸簱瀛樻暟鎹€佷緵搴斿晢娓呭崟銆傜郴缁熻嚜鍔ㄨ瘑鍒〃澶?+ 鎺ㄦ柇鍒楃被鍨嬶紝鎻愬彇 Material/Supplier 鑺傜偣銆?,
   },
   pdf: {
-    label: 'PDF 工艺文件',
+    label: 'PDF 宸ヨ壓鏂囦欢',
     color: 'red',
     icon: <FilePdfOutlined />,
     accept: '.pdf',
-    desc: '工艺规范、操作手册、SOP。提取 Process/ProcessStep 节点。',
+    desc: '宸ヨ壓瑙勮寖銆佹搷浣滄墜鍐屻€丼OP銆傛彁鍙?Process/ProcessStep 鑺傜偣銆?,
   },
   meeting: {
-    label: '会议录音',
+    label: '浼氳褰曢煶',
     color: 'purple',
     icon: <AudioOutlined />,
     accept: '.mp3,.wav,.m4a',
-    desc: '晨会、复盘会、决策会录音。先转写（whisper / 阿里云 ASR），再提取 BusinessRule 节点。',
+    desc: '鏅ㄤ細銆佸鐩樹細銆佸喅绛栦細褰曢煶銆傚厛杞啓锛坵hisper / 闃块噷浜?ASR锛夛紝鍐嶆彁鍙?BusinessRule 鑺傜偣銆?,
   },
   doc: {
-    label: 'Markdown 规范',
+    label: 'Markdown 瑙勮寖',
     color: 'blue',
     icon: <FileTextOutlined />,
     accept: '.md,.markdown',
-    desc: '制度、流程、规范、考核标准文档。提取 DeliveryStandard 候选。',
+    desc: '鍒跺害銆佹祦绋嬨€佽鑼冦€佽€冩牳鏍囧噯鏂囨。銆傛彁鍙?DeliveryStandard 鍊欓€夈€?,
   },
 };
 
@@ -69,29 +69,28 @@ export default function IngestPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 180_000,
       });
-      message.success(`上传成功：${r.data.filename}（${r.data.status}）`);
+      message.success(`涓婁紶鎴愬姛锛?{r.data.filename}锛?{r.data.status}锛塦);
       router.push(`/ingest/jobs/${r.data.id}`);
     } catch (e: unknown) {
-      const m = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '上传失败';
+      const m = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '涓婁紶澶辫触';
       message.error(m);
     } finally {
       setUploading(false);
     }
-    return false; // 阻止 antd 默认上传
+    return false; // 闃绘 antd 榛樿涓婁紶
   };
 
   const meta = KIND_META[kind]!;
 
   return (
     <ConsoleShell>
-      <Typography.Title level={3}>数据接入</Typography.Title>
+      <Typography.Title level={3}>鏁版嵁鎺ュ叆</Typography.Title>
       <Typography.Paragraph type="secondary">
-        V2 支持 4 类源数据上传：Excel / PDF / 会议录音 / Markdown。文件经解析后自动写入本体图（Neo4j），并生成业务规则候选。
-      </Typography.Paragraph>
+        V2 鏀寔 4 绫绘簮鏁版嵁涓婁紶锛欵xcel / PDF / 浼氳褰曢煶 / Markdown銆傛枃浠剁粡瑙ｆ瀽鍚庤嚜鍔ㄥ啓鍏ユ湰浣撳浘锛圢eo4j锛夛紝骞剁敓鎴愪笟鍔¤鍒欏€欓€夈€?      </Typography.Paragraph>
 
       <Card style={{ marginBottom: 16 }}>
         <Form form={form} layout="vertical">
-          <Form.Item label="选择数据源类型" required>
+          <Form.Item label="閫夋嫨鏁版嵁婧愮被鍨? required>
             <Select
               value={kind}
               onChange={setKind}
@@ -133,13 +132,13 @@ export default function IngestPage() {
                       disabled={uploading}
                     >
                       <Button type="primary" size="large" icon={<UploadOutlined />} loading={uploading}>
-                        {uploading ? '处理中…' : `选择 ${m.label} 文件`}
+                        {uploading ? '澶勭悊涓€? : `閫夋嫨 ${m.label} 鏂囦欢`}
                       </Button>
                     </Upload>
                   </Col>
                   <Col>
                     <Typography.Text type="secondary">
-                      支持格式：<Tag>{m.accept}</Tag>
+                      鏀寔鏍煎紡锛?Tag>{m.accept}</Tag>
                     </Typography.Text>
                   </Col>
                 </Row>

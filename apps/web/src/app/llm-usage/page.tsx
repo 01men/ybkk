@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { App, Button, Card, Col, Form, Input, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import ConsoleShell from '../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 type Usage = {
@@ -27,8 +27,8 @@ const PROVIDER_COLOR: Record<string, string> = {
 };
 
 const PROVIDER_LABEL: Record<string, string> = {
-  'qwen-local': 'Qwen 本地',
-  dashscope: '阿里云 DashScope',
+  'qwen-local': 'Qwen 鏈湴',
+  dashscope: '闃块噷浜?DashScope',
   openai: 'OpenAI',
   anthropic: 'Anthropic',
 };
@@ -48,42 +48,40 @@ export default function LLMUsagePage() {
       (await api.post<TestResp>('/llm/test', vals)).data,
     onSuccess: (r) => {
       setTestResp(r);
-      message.success(`调用成功，耗时 ${r.duration_ms} ms`);
+      message.success(`璋冪敤鎴愬姛锛岃€楁椂 ${r.duration_ms} ms`);
     },
     onError: (e: unknown) => {
-      const m = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '调用失败';
+      const m = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '璋冪敤澶辫触';
       message.error(m);
     },
   });
 
   return (
     <ConsoleShell>
-      <Typography.Title level={3}>LLM 用量与连通性</Typography.Title>
+      <Typography.Title level={3}>LLM 鐢ㄩ噺涓庤繛閫氭€?/Typography.Title>
       <Typography.Paragraph type="secondary">
-        V2 接入 4 个 LLM provider：Qwen 本地（默认）/ 阿里云 DashScope / OpenAI / Anthropic。失败自动 fallback。
-        所有调用都记入 llm_calls 表（按 provider 统计）。
-      </Typography.Paragraph>
+        V2 鎺ュ叆 4 涓?LLM provider锛歈wen 鏈湴锛堥粯璁わ級/ 闃块噷浜?DashScope / OpenAI / Anthropic銆傚け璐ヨ嚜鍔?fallback銆?        鎵€鏈夎皟鐢ㄩ兘璁板叆 llm_calls 琛紙鎸?provider 缁熻锛夈€?      </Typography.Paragraph>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={12} sm={6}>
           <Card>
-            <Statistic title="总调用次数" value={data?.total_calls ?? 0} />
+            <Statistic title="鎬昏皟鐢ㄦ鏁? value={data?.total_calls ?? 0} />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
           <Card>
-            <Statistic title="输入 token" value={data?.total_input_tokens ?? 0} />
+            <Statistic title="杈撳叆 token" value={data?.total_input_tokens ?? 0} />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
           <Card>
-            <Statistic title="输出 token" value={data?.total_output_tokens ?? 0} />
+            <Statistic title="杈撳嚭 token" value={data?.total_output_tokens ?? 0} />
           </Card>
         </Col>
         <Col xs={12} sm={6}>
           <Card>
             <Statistic
-              title="总成本 (USD)"
+              title="鎬绘垚鏈?(USD)"
               value={data?.total_cost_usd ?? 0}
               precision={4}
               prefix="$"
@@ -92,7 +90,7 @@ export default function LLMUsagePage() {
         </Col>
       </Row>
 
-      <Card title="按 Provider 分组" style={{ marginBottom: 16 }} loading={isLoading}>
+      <Card title="鎸?Provider 鍒嗙粍" style={{ marginBottom: 16 }} loading={isLoading}>
         <Table
           dataSource={Object.entries(data?.by_provider ?? {}).map(([k, v]) => ({ provider: k, ...v }))}
           rowKey="provider"
@@ -107,11 +105,11 @@ export default function LLMUsagePage() {
                 <Tag color={PROVIDER_COLOR[p] ?? 'default'}>{PROVIDER_LABEL[p] ?? p}</Tag>
               ),
             },
-            { title: '调用次数', dataIndex: 'calls', width: 100, align: 'right' },
-            { title: '输入 token', dataIndex: 'input_tokens', width: 120, align: 'right' },
-            { title: '输出 token', dataIndex: 'output_tokens', width: 120, align: 'right' },
+            { title: '璋冪敤娆℃暟', dataIndex: 'calls', width: 100, align: 'right' },
+            { title: '杈撳叆 token', dataIndex: 'input_tokens', width: 120, align: 'right' },
+            { title: '杈撳嚭 token', dataIndex: 'output_tokens', width: 120, align: 'right' },
             {
-              title: '成本 (USD)',
+              title: '鎴愭湰 (USD)',
               dataIndex: 'cost_usd',
               width: 120,
               align: 'right',
@@ -121,12 +119,12 @@ export default function LLMUsagePage() {
         />
       </Card>
 
-      <Card title="LLM 连通性测试">
+      <Card title="LLM 杩為€氭€ф祴璇?>
         <Form
           form={form}
           layout="vertical"
           onFinish={(v) => testMut.mutate(v)}
-          initialValues={{ provider: 'qwen-local', prompt: '用一句话介绍元冰可可 AIOS。' }}
+          initialValues={{ provider: 'qwen-local', prompt: '鐢ㄤ竴鍙ヨ瘽浠嬬粛鍏冨啺鍙彲 AIOS銆? }}
         >
           <Row gutter={16}>
             <Col xs={24} md={8}>
@@ -146,21 +144,21 @@ export default function LLMUsagePage() {
             </Col>
             <Col xs={24} md={16}>
               <Form.Item label="Prompt" name="prompt" rules={[{ required: true }]}>
-                <Input.TextArea rows={2} placeholder="输入测试 prompt..." />
+                <Input.TextArea rows={2} placeholder="杈撳叆娴嬭瘯 prompt..." />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={testMut.isPending}>
-                调用
+                璋冪敤
               </Button>
-              <Button onClick={() => refetch()}>刷新用量</Button>
+              <Button onClick={() => refetch()}>鍒锋柊鐢ㄩ噺</Button>
             </Space>
           </Form.Item>
         </Form>
         {testResp && (
-          <Card type="inner" title={`响应（${testResp.duration_ms} ms）`} style={{ marginTop: 16, background: '#fafafa' }}>
+          <Card type="inner" title={`鍝嶅簲锛?{testResp.duration_ms} ms锛塦} style={{ marginTop: 16, background: '#fafafa' }}>
             <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{testResp.response}</pre>
           </Card>
         )}

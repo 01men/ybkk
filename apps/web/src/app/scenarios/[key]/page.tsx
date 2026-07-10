@@ -3,7 +3,7 @@
 import { App, Card, Descriptions, Tag, Typography } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import ConsoleShell from '../../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 type Scenario = {

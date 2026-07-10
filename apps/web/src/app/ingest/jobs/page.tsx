@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { ProTable, ProColumns } from '@ant-design/pro-components';
 import { App, Tag, Typography } from 'antd';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import ConsoleShell from '../../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 type IngestJob = {
@@ -44,39 +44,39 @@ export default function IngestJobsPage() {
   });
 
   const columns: ProColumns<IngestJob>[] = [
-    { title: '任务 ID', dataIndex: 'id', width: 220, ellipsis: true },
+    { title: '浠诲姟 ID', dataIndex: 'id', width: 220, ellipsis: true },
     {
-      title: '类型',
+      title: '绫诲瀷',
       dataIndex: 'kind',
       width: 100,
       render: (_, r) => <Tag color={KIND_COLOR[r.kind] ?? 'default'}>{r.kind}</Tag>,
     },
-    { title: '文件名', dataIndex: 'filename', width: 220, ellipsis: true },
+    { title: '鏂囦欢鍚?, dataIndex: 'filename', width: 220, ellipsis: true },
     {
-      title: '状态',
+      title: '鐘舵€?,
       dataIndex: 'status',
       width: 100,
       render: (_, r) => <Tag color={STATUS_COLOR[r.status] ?? 'default'}>{r.status}</Tag>,
     },
-    { title: '解析行数', dataIndex: 'parsed_count', width: 90, align: 'right' },
-    { title: '实体数', dataIndex: 'entities_count', width: 90, align: 'right' },
-    { title: '关系数', dataIndex: 'relations_count', width: 90, align: 'right' },
-    { title: '创建人', dataIndex: 'created_by', width: 100 },
-    { title: '创建时间', dataIndex: 'created_at', valueType: 'dateTime', width: 180 },
-    { title: '完成时间', dataIndex: 'finished_at', valueType: 'dateTime', width: 180 },
+    { title: '瑙ｆ瀽琛屾暟', dataIndex: 'parsed_count', width: 90, align: 'right' },
+    { title: '瀹炰綋鏁?, dataIndex: 'entities_count', width: 90, align: 'right' },
+    { title: '鍏崇郴鏁?, dataIndex: 'relations_count', width: 90, align: 'right' },
+    { title: '鍒涘缓浜?, dataIndex: 'created_by', width: 100 },
+    { title: '鍒涘缓鏃堕棿', dataIndex: 'created_at', valueType: 'dateTime', width: 180 },
+    { title: '瀹屾垚鏃堕棿', dataIndex: 'finished_at', valueType: 'dateTime', width: 180 },
     {
-      title: '操作',
+      title: '鎿嶄綔',
       valueType: 'option',
       width: 100,
-      render: (_, r) => [<Link key="view" href={`/ingest/jobs/${r.id}`}>详情</Link>],
+      render: (_, r) => [<Link key="view" href={`/ingest/jobs/${r.id}`}>璇︽儏</Link>],
     },
   ];
 
   return (
     <ConsoleShell>
-      <Typography.Title level={3}>摄取任务</Typography.Title>
+      <Typography.Title level={3}>鎽勫彇浠诲姟</Typography.Title>
       <ProTable<IngestJob>
-        headerTitle="历史任务（5s 自动刷新）"
+        headerTitle="鍘嗗彶浠诲姟锛?s 鑷姩鍒锋柊锛?
         loading={isLoading}
         dataSource={data ?? []}
         columns={columns}
@@ -84,7 +84,7 @@ export default function IngestJobsPage() {
         search={false}
         onReload={() => {
           refetch();
-          message.success('已刷新');
+          message.success('宸插埛鏂?);
         }}
         pagination={{ pageSize: 20 }}
       />

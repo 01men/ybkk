@@ -1,16 +1,16 @@
-'use client';
+﻿'use client';
 
 import { App, Card, Col, Row, Space, Tag, Typography } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import ConsoleShell from '../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 const DASHBOARDS = [
-  { uid: 'aios-api', title: 'API', desc: '请求速率 / P95 延迟 / 5xx 错误率', color: 'blue' },
-  { uid: 'aios-flow', title: 'Flow', desc: 'Flow run 状态 / 失败率 / step 耗时', color: 'purple' },
-  { uid: 'aios-llm', title: 'LLM', desc: '调用速率 / P95 延迟 / 注入拦截', color: 'green' },
-  { uid: 'aios-ingest', title: 'Ingest', desc: '任务速率 / 状态分布', color: 'orange' },
-  { uid: 'aios-ontology', title: 'Ontology & System', desc: '本体节点数 / Ollama 健康 / 容器 CPU', color: 'magenta' },
+  { uid: 'aios-api', title: 'API', desc: '璇锋眰閫熺巼 / P95 寤惰繜 / 5xx 閿欒鐜?, color: 'blue' },
+  { uid: 'aios-flow', title: 'Flow', desc: 'Flow run 鐘舵€?/ 澶辫触鐜?/ step 鑰楁椂', color: 'purple' },
+  { uid: 'aios-llm', title: 'LLM', desc: '璋冪敤閫熺巼 / P95 寤惰繜 / 娉ㄥ叆鎷︽埅', color: 'green' },
+  { uid: 'aios-ingest', title: 'Ingest', desc: '浠诲姟閫熺巼 / 鐘舵€佸垎甯?, color: 'orange' },
+  { uid: 'aios-ontology', title: 'Ontology & System', desc: '鏈綋鑺傜偣鏁?/ Ollama 鍋ュ悍 / 瀹瑰櫒 CPU', color: 'magenta' },
 ];
 
 export default function MonitoringPage() {
@@ -29,11 +29,9 @@ export default function MonitoringPage() {
 
   return (
     <ConsoleShell>
-      <Typography.Title level={3}>监控仪表盘</Typography.Title>
+      <Typography.Title level={3}>鐩戞帶浠〃鐩?/Typography.Title>
       <Typography.Paragraph type="secondary">
-        V3 监控由 Prometheus + Grafana + Loki + cadvisor 组成。默认未启动（profile=monitoring）。
-        启动后访问 <a href="http://localhost:3001" target="_blank">Grafana</a>（admin/admin）。
-      </Typography.Paragraph>
+        V3 鐩戞帶鐢?Prometheus + Grafana + Loki + cadvisor 缁勬垚銆傞粯璁ゆ湭鍚姩锛坧rofile=monitoring锛夈€?        鍚姩鍚庤闂?<a href="http://localhost:3001" target="_blank">Grafana</a>锛坅dmin/admin锛夈€?      </Typography.Paragraph>
 
       <Row gutter={[16, 16]}>
         {DASHBOARDS.map((d) => (
@@ -43,7 +41,7 @@ export default function MonitoringPage() {
               title={
                 <Space>
                   <Tag color={d.color}>{d.title}</Tag>
-                  <span style={{ fontSize: 14 }}>{d.title} 监控</span>
+                  <span style={{ fontSize: 14 }}>{d.title} 鐩戞帶</span>
                 </Space>
               }
               extra={
@@ -52,8 +50,7 @@ export default function MonitoringPage() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  打开 ↗
-                </a>
+                  鎵撳紑 鈫?                </a>
               }
             >
               <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>
@@ -64,25 +61,24 @@ export default function MonitoringPage() {
         ))}
       </Row>
 
-      <Card title="Prometheus 状态" style={{ marginTop: 16 }}>
+      <Card title="Prometheus 鐘舵€? style={{ marginTop: 16 }}>
         {isLoading ? (
-          <Typography.Text>检查中…</Typography.Text>
+          <Typography.Text>妫€鏌ヤ腑鈥?/Typography.Text>
         ) : (
           <Space direction="vertical">
-            <Tag color="green">API /health 端点可达</Tag>
+            <Tag color="green">API /health 绔偣鍙揪</Tag>
             <Typography.Text type="secondary">
-              Prometheus 抓取状态：<a href="http://localhost:9090/targets" target="_blank">/targets</a>
+              Prometheus 鎶撳彇鐘舵€侊細<a href="http://localhost:9090/targets" target="_blank">/targets</a>
             </Typography.Text>
             {data ? null : (
               <Typography.Text type="warning">
-                API 不可达 — 监控可能无法抓取指标
+                API 涓嶅彲杈?鈥?鐩戞帶鍙兘鏃犳硶鎶撳彇鎸囨爣
               </Typography.Text>
             )}
             <Typography.Paragraph style={{ marginTop: 8 }}>
-              <a onClick={() => message.info('已刷新')} style={{ marginRight: 16 }}>刷新</a>
+              <a onClick={() => message.info('宸插埛鏂?)} style={{ marginRight: 16 }}>鍒锋柊</a>
               <a onClick={() => window.open('http://localhost:9090/alerts', '_blank')}>
-                查看告警 →
-              </a>
+                鏌ョ湅鍛婅 鈫?              </a>
             </Typography.Paragraph>
           </Space>
         )}

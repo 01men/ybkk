@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { ProTable, ProColumns } from '@ant-design/pro-components';
 import { App, Tag } from 'antd';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import ConsoleShell from '../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 type Datasource = {
@@ -24,9 +24,9 @@ export default function DatasourcesPage() {
 
   const columns: ProColumns<Datasource>[] = [
     { title: 'ID', dataIndex: 'id', width: 220, ellipsis: true },
-    { title: '类型', dataIndex: 'type', width: 100 },
+    { title: '绫诲瀷', dataIndex: 'type', width: 100 },
     {
-      title: '状态',
+      title: '鐘舵€?,
       dataIndex: 'status',
       width: 110,
       render: (_, r) => {
@@ -34,14 +34,14 @@ export default function DatasourcesPage() {
         return <Tag color={color}>{r.status}</Tag>;
       },
     },
-    { title: '最后检查', dataIndex: 'last_check_at', valueType: 'dateTime', width: 180 },
-    { title: '创建时间', dataIndex: 'created_at', valueType: 'dateTime', width: 180 },
+    { title: '鏈€鍚庢鏌?, dataIndex: 'last_check_at', valueType: 'dateTime', width: 180 },
+    { title: '鍒涘缓鏃堕棿', dataIndex: 'created_at', valueType: 'dateTime', width: 180 },
   ];
 
   return (
     <ConsoleShell>
       <ProTable<Datasource>
-        headerTitle="数据源"
+        headerTitle="鏁版嵁婧?
         loading={isLoading}
         dataSource={data ?? []}
         columns={columns}
@@ -49,11 +49,11 @@ export default function DatasourcesPage() {
         search={false}
         toolBarRender={() => [
           <Link key="new" href="/datasources/new">
-            <a style={{ color: '#1677ff' }}>新建数据源</a>
+            <a style={{ color: '#1677ff' }}>鏂板缓鏁版嵁婧?/a>
           </Link>,
         ]}
         request={async () => ({ data: data ?? [], success: true, total: data?.length ?? 0 })}
-        onError={() => message.error('加载失败')}
+        onError={() => message.error('鍔犺浇澶辫触')}
         onReload={() => refetch()}
       />
     </ConsoleShell>

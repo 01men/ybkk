@@ -4,7 +4,7 @@ import { ProTable, ProColumns } from '@ant-design/pro-components';
 import { App, Card, Tag, Typography } from 'antd';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import ConsoleShell from '../../console-shell';
+import ConsoleShell from '@/components/console-shell';
 import { api } from '@/lib/api';
 
 type Run = {
