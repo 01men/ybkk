@@ -40,10 +40,9 @@ RELATIONSHIPS: tuple[tuple[str, str, str], ...] = (
 )
 
 # Cypher 一键初始化
+# neo4j 5.x：直接 CREATE CONSTRAINT 会自动建 backing index，
+# 不需要先建 INDEX（否则同名属性上 INDEX 已存在，CONSTRAINT 会拒绝）
 INIT_CYPHER: list[str] = [
-    # 索引
-    *[f"CREATE INDEX IF NOT EXISTS FOR (n:{k.name}) ON (n.external_id)" for k in NODES],
-    # 唯一约束
     *[f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{k.name}) REQUIRE n.external_id IS UNIQUE" for k in NODES],
 ]
 

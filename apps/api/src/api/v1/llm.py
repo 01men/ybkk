@@ -1,4 +1,4 @@
-"""aios_api.api.v1.llm —— LLM 用量 + 测试 API（V2）。"""
+"""aios_api.api.v1.llm —— LLM 用量 + 测试 API（V3-V6：兼容本地 ollama + Anthropic 云端）。"""
 from __future__ import annotations
 
 import os
@@ -13,6 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...db import get_session
+from ...llm_client import chat, get_model, get_provider
 from ...middleware.auth import CurrentUser
 from ...models import LLMCall
 
@@ -78,23 +79,21 @@ async def get_usage(
 
 @router.post("/test", response_model=TestResponse, summary="测试 LLM 连通")
 async def test_llm(body: TestRequest, user: CurrentUser) -> TestResponse:
-    """V2 简化：只测本地 Qwen。"""
-    ollama_url = os.getenv("AIOS_LLM_URL", "http://ollama:11434")
+    """V6: 通过 llm_client 统一调（本地 ollama 或 Anthropic 云端，由 AIOS_LLM_PROVIDER 切换）。"""
     import time
 
     start = time.time()
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            r = await client.post(
-                f"{ollama_url}/api/generate",
-                json={"model": "qwen2.5:7b", "prompt": body.prompt, "stream": False},
-            )
-            r.raise_for_status()
-            response_text = r.json().get("response", "")
-    except httpx.HTTPError as e:
+        response_text, duration_ms = chat(
+            [{"role": "user", "content": body.prompt}],
+            timeout=60.0,
+        )
+    except Exception as e:  # noqa: BLE001
         return TestResponse(response=f"[error] {e}", duration_ms=int((time.time() - start) * 1000))
-    duration_ms = int((time.time() - start) * 1000)
+    if not response_text:
+        return TestResponse(
+            response=f"[empty] provider={get_provider()} model={get_model()}",
+            duration_ms=duration_ms,
+        )
 
-    # 记调用
-    # V2 简化：仅在成功时记
     return TestResponse(response=response_text, duration_ms=duration_ms)

@@ -1,12 +1,11 @@
 # =============================================================================
-# 元冰可可 AIOS — Docker Compose 一键私有化部署 (V3)
+# 元冰可可 AIOS — Docker Compose 一键私有化部署 (V6)
 # =============================================================================
-# V3 新增：
-#   - 多租户 / RBAC：api + ingest + ontology 内部按 org_id 隔离
-#   - ollama 改用 apps/ollama 独立 image（自动 pull qwen2.5:7b）
-#   - 监控 profile=monitoring：prometheus / grafana / loki / promtail / cadvisor
+# V6 变更：
+#   - 删除本地 ollama 服务，统一通过 llm_client 调用云端 API（AIOS_LLM_PROVIDER 切换）
+#   - 默认 AIOS_LLM_PROVIDER=anthropic（OpenAI/DeepSeek/MiniMax 等走 Anthropic 兼容协议）
 # 默认配置：API / Web / PostgreSQL / Neo4j / Redis / MinIO / NATS / Temporal /
-#           Flow-Engine / Ingest / Ontology / Ollama
+#           Flow-Engine / Ingest / Ontology
 # 监控：默认不起，需 `docker compose --profile monitoring up -d` 启用
 # =============================================================================
 
@@ -18,7 +17,7 @@ x-common-env: &common-env
 
 services:
   # ---------------------------------------------------------------------------
-  # 控制台（前端 V3）
+  # 控制台（前端 V6）
   # ---------------------------------------------------------------------------
   web:
     image: ybkk-web:${AIOS_VERSION:-0.4.0}
@@ -39,7 +38,7 @@ services:
       retries: 6
 
   # ---------------------------------------------------------------------------
-  # API（后端 V3：多租户 + RBAC + /metrics）
+  # API（后端 V6：多租户 + RBAC + /metrics + LLM 抽象）
   # ---------------------------------------------------------------------------
   api:
     image: ybkk-api:${AIOS_VERSION:-0.4.0}
@@ -52,7 +51,10 @@ services:
       - "${AIOS_API_PORT:-8000}:8000"
     environment:
       AIOS_ONTOLOGY_URL: http://ontology:8083
-      AIOS_LLM_URL: http://ollama:11434
+      AIOS_LLM_PROVIDER: ${AIOS_LLM_PROVIDER:-anthropic}
+      AIOS_LLM_BASE_URL: ${AIOS_LLM_BASE_URL:-https://api.minimaxi.com/anthropic}
+      AIOS_LLM_MODEL: ${AIOS_LLM_MODEL:-MiniMax-M3}
+      AIOS_LLM_API_KEY: ${AIOS_LLM_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,8 +68,6 @@ services:
         condition: service_healthy
       temporal:
         condition: service_healthy
-      ollama:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 10s
@@ -75,7 +75,7 @@ services:
       retries: 6
 
   # ---------------------------------------------------------------------------
-  # 数据接入 worker (V3：org_id 隔离 + /metrics)
+  # 数据接入 worker (V6：org_id 隔离 + /metrics + LLM 抽象)
   # ---------------------------------------------------------------------------
   ingest:
     image: ybkk-ingest:${AIOS_VERSION:-0.4.0}
@@ -84,7 +84,12 @@ services:
       dockerfile: Dockerfile
     <<: *common-env
     container_name: aios_ingest_1
-    command: ["uv", "run", "python", "-m", "aios_ingest.worker"]
+    command: ["uvicorn", "aios_ingest.main:app", "--host", "0.0.0.0", "--port", "8082"]
+    environment:
+      AIOS_LLM_PROVIDER: ${AIOS_LLM_PROVIDER:-anthropic}
+      AIOS_LLM_BASE_URL: ${AIOS_LLM_BASE_URL:-https://api.minimaxi.com/anthropic}
+      AIOS_LLM_MODEL: ${AIOS_LLM_MODEL:-MiniMax-M3}
+      AIOS_LLM_API_KEY: ${AIOS_LLM_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,8 +97,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      ollama:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
       interval: 30s
@@ -101,7 +104,7 @@ services:
       retries: 3
 
   # ---------------------------------------------------------------------------
-  # 本体图服务 (V3：org_id 隔离 + /metrics)
+  # 本体图服务 (V6：org_id 隔离 + /metrics + LLM 抽象)
   # ---------------------------------------------------------------------------
   ontology:
     image: ybkk-ontology:${AIOS_VERSION:-0.4.0}
@@ -110,14 +113,20 @@ services:
       dockerfile: Dockerfile
     <<: *common-env
     container_name: aios_ontology_1
-    command: ["uv", "run", "python", "-m", "aios_ontology.worker"]
+    command: ["uvicorn", "aios_ontology.main:app", "--host", "0.0.0.0", "--port", "8083"]
+    environment:
+      AIOS_LLM_PROVIDER: ${AIOS_LLM_PROVIDER:-anthropic}
+      AIOS_LLM_BASE_URL: ${AIOS_LLM_BASE_URL:-https://api.minimaxi.com/anthropic}
+      AIOS_LLM_MODEL: ${AIOS_LLM_MODEL:-MiniMax-M3}
+      AIOS_LLM_API_KEY: ${AIOS_LLM_API_KEY:-}
+      AIOS_ONT_NEO4J_URI: bolt://neo4j:7687
+      AIOS_ONT_NEO4J_USER: ${NEO4J_USER:-neo4j}
+      AIOS_ONT_NEO4J_PASSWORD: ${NEO4J_PASSWORD:-aios_cb9176ede888_n}
     depends_on:
       neo4j:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      ollama:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
       interval: 30s
@@ -125,7 +134,7 @@ services:
       retries: 3
 
   # ---------------------------------------------------------------------------
-  # Flow Engine (V3：/metrics + 反 prompt injection)
+  # Flow Engine (V6：/metrics + 反 prompt injection + LLM 抽象)
   # ---------------------------------------------------------------------------
   flow-engine:
     image: ybkk-flow-engine:${AIOS_VERSION:-0.4.0}
@@ -139,15 +148,16 @@ services:
     environment:
       AIOS_FLOW_TEMPORAL_HOST: temporal:7233
       AIOS_FLOW_API_URL: http://api:8000
-      AIOS_LLM_URL: http://ollama:11434
+      AIOS_LLM_PROVIDER: ${AIOS_LLM_PROVIDER:-anthropic}
+      AIOS_LLM_BASE_URL: ${AIOS_LLM_BASE_URL:-https://api.minimaxi.com/anthropic}
+      AIOS_LLM_MODEL: ${AIOS_LLM_MODEL:-MiniMax-M3}
+      AIOS_LLM_API_KEY: ${AIOS_LLM_API_KEY:-}
       AIOS_FLOW_LOG_LEVEL: INFO
     depends_on:
       temporal:
         condition: service_healthy
       api:
         condition: service_healthy
-      ollama:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 10s
@@ -183,7 +193,7 @@ services:
     <<: *common-env
     container_name: aios_neo4j_1
     environment:
-      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/aios}
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/aios2026}
       NEO4J_PLUGINS: '[]'
       NEO4J_dbms_security_procedures_unrestricted: apoc.*
       NEO4J_apoc_export_file_enabled: "true"
@@ -191,10 +201,11 @@ services:
     volumes:
       - neo4j-data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7474/"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:7474/"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   # ---------------------------------------------------------------------------
   # Redis（缓存 + 限流）
@@ -238,14 +249,15 @@ services:
     image: nats:2-alpine
     <<: *common-env
     container_name: aios_nats_1
-    command: ["nats-server", "-js"]
+    command: ["nats-server", "-js", "-m", "8222"]
     volumes:
       - nats-data:/data
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
-      retries: 6
+      retries: 10
+      start_period: 30s
 
   # ---------------------------------------------------------------------------
   # Temporal（流程引擎）
@@ -255,7 +267,7 @@ services:
     <<: *common-env
     container_name: aios_temporal_1
     environment:
-      DB: postgresql
+      DB: postgres12
       DB_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-aios}
       POSTGRES_PWD: ${POSTGRES_PASSWORD}
@@ -267,37 +279,11 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8233/"]
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/7233"]
       interval: 10s
       timeout: 5s
       retries: 6
-
-  # ---------------------------------------------------------------------------
-  # Ollama (V3：apps/ollama 独立 image + entrypoint 自动 pull qwen2.5:7b)
-  # ---------------------------------------------------------------------------
-  ollama:
-    image: ybkk-ollama:${AIOS_VERSION:-0.4.0}
-    build:
-      context: ../../apps/ollama
-      dockerfile: Dockerfile
-    container_name: aios_ollama_1
-    restart: unless-stopped
-    networks:
-      - aios-net
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-    environment:
-      OLLAMA_HOST: "0.0.0.0:11434"
-      OLLAMA_KEEP_ALIVE: "24h"
-      AIOS_OLLAMA_PULL_MODELS: ${AIOS_OLLAMA_PULL_MODELS:-qwen2.5:7b}
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 6
-      start_period: 60s
+      start_period: 30s
 
   # ===========================================================================
   # 监控 profile（默认不起：`docker compose --profile monitoring up -d`）
@@ -421,7 +407,6 @@ volumes:
   redis-data:
   minio-data:
   nats-data:
-  ollama-data:
   monitoring-data:
   grafana-data:
   loki-data:

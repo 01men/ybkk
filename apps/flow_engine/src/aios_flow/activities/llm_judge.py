@@ -1,4 +1,4 @@
-"""aios_flow.activities.llm_judge —— V2 LLM 判断 + V3 SEC-V3-01 系统角色隔离。"""
+"""aios_flow.activities.llm_judge —— V2 LLM 判断 + V3 SEC-V3-01 系统角色隔离 + V6 LLM 抽象。"""
 from __future__ import annotations
 
 import hashlib
@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-import httpx
+from ..llm_client import chat as _llm_chat
 
 logger = logging.getLogger("aios_flow.llm_judge")
 
@@ -136,22 +136,10 @@ def _detect_injection(context: dict[str, Any], user_prompt: str) -> bool:
 
 
 def _llm_call(
-    ollama_url: str, model: str, messages: list[dict], timeout: float = 60.0
+    _ollama_url_unused: str, model: str, messages: list[dict], timeout: float = 60.0
 ) -> tuple[str, int]:
-    """V3: 调 Ollama /api/chat（chat API 支持 system / user role 分离）。"""
-    start = time.time()
-    with httpx.Client(timeout=timeout) as client:
-        r = client.post(
-            f"{ollama_url}/api/chat",
-            json={"model": model, "messages": messages, "stream": False},
-        )
-        r.raise_for_status()
-        payload = r.json()
-        text = (
-            payload.get("message", {}).get("content", "")
-            or payload.get("response", "")
-        )
-    duration_ms = int((time.time() - start) * 1000)
+    """V6: 委托给 llm_client 统一调（本地 ollama 或 Anthropic 云端）。_ollama_url_unused 参数保留向后兼容。"""
+    text, duration_ms = _llm_chat(messages, model=model, timeout=timeout)
     return text, duration_ms
 
 
@@ -162,7 +150,6 @@ def _gen_call_id(prompt: str, response: str) -> str:
 
 async def llm_judge(input: LLMJudgeInput) -> LLMJudgeResult:
     """LLM judge 核心实现（V3 SEC-V3-01：system 角色隔离 + 反注入）。"""
-    ollama_url = os.getenv("AIOS_LLM_URL", "http://ollama:11434")
     messages = _build_messages(input.system_prompt, input.user_prompt, input.context)
 
     # V3 反注入检查
@@ -182,7 +169,7 @@ async def llm_judge(input: LLMJudgeInput) -> LLMJudgeResult:
         )
 
     try:
-        text, duration_ms = _llm_call(ollama_url, input.model, messages)
+        text, duration_ms = _llm_call("unused", input.model, messages)
     except Exception as e:  # noqa: BLE001
         logger.warning("llm call failed: %s", e)
         return LLMJudgeResult(
