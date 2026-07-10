@@ -54,7 +54,6 @@ export default function DatasourcesPage() {
         ]}
         request={async () => ({ data: data ?? [], success: true, total: data?.length ?? 0 })}
         onError={() => message.error('鍔犺浇澶辫触')}
-        onReload={() => refetch()}
       />
     </ConsoleShell>
   );

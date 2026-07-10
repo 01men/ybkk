@@ -82,10 +82,7 @@ export default function IngestJobsPage() {
         columns={columns}
         rowKey="id"
         search={false}
-        onReload={() => {
-          refetch();
-          message.success('宸插埛鏂?);
-        }}
+        request={async () => ({ data: data ?? [], success: true, total: data?.length ?? 0 })}
         pagination={{ pageSize: 20 }}
       />
     </ConsoleShell>

@@ -73,7 +73,10 @@ export default function AuditsPage() {
         columns={columns}
         rowKey="id"
         search={false}
-        onReload={() => refetch()}
+        request={async () => ({ data: data ?? [], success: true, total: data?.length ?? 0 })}
+        toolBarRender={() => [
+          <Button key="reload" onClick={() => refetch()}>刷新</Button>,
+        ]}
       />
     </ConsoleShell>
   );
